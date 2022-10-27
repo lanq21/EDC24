@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -27,6 +28,8 @@
 #include<string.h>
 #include<stdio.h>
 #include "pid.h"
+#include "jy62.h"
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,8 +50,22 @@
 
 /* USER CODE BEGIN PV */
 int16_t lastCnt[4];
-pid speedPid[4];
+pid speedPid[6];
+int16_t curCnt[4],speed[4];
 
+pid zAnglePid;
+
+extern uint8_t jy62_buff[JY62_BUFFSIZE];
+extern struct vec acc,angle,vel;
+extern uint32_t height;
+extern float g;
+
+enum stateValue{
+	running,
+	calibrating,
+	stop
+};
+uint8_t state=stop;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,6 +115,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
@@ -120,12 +138,27 @@ int main(void)
 	
 	HAL_TIM_Base_Start_IT(&htim7);
 	
-	pid_init(&speedPid[0],10.0f, 0.01f, 0.0f);
-	pid_init(&speedPid[1],10.0f, 0.01f, 0.0f);
-	pid_init(&speedPid[2],10.0f, 0.01f, 0.0f);
-	pid_init(&speedPid[3],5.0f, 0.00f, 0.0f);
-	speedPid[0].goal=0;
-	speedPid[3].goal=4;
+	HAL_UARTEx_ReceiveToIdle_DMA(&huart3,jy62_buff,JY62_BUFFSIZE);
+	
+	state=calibrating;
+	jy62_init(&huart3);
+	//calibrate();
+	HAL_Delay(500);
+	initAngle();
+	HAL_Delay(500);
+	state=running;
+	
+	pid_init(&speedPid[0],1.0f, 0.05f, 0.0f);
+	pid_init(&speedPid[1],1.0f, 0.05f, 0.0f);
+	pid_init(&speedPid[2],1.0f, 0.05f, 0.0f);
+	pid_init(&speedPid[3],1.0f, 0.05f, 0.0f);
+	//speedPid[0].goal=10;
+	//speedPid[1].goal=10;
+	//speedPid[2].goal=10;
+	//speedPid[3].goal=10;
+	
+	pid_init(&zAnglePid,1.0f,0.08f,0.01f);
+	zAnglePid.goal=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -135,7 +168,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		
+		//setSpeed(1,10);
+		//setSpeed(2,20);
+		//setSpeed(3,30);
+		//setSpeed(4,40);
+		printf("goal:%f,actual:%f,err:%f\n", zAnglePid.goal, angle.z,zAnglePid.err);
+		HAL_Delay(10);
 		/*
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,0);
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_7,1);
@@ -161,12 +199,12 @@ int main(void)
 		//setSpeed(2,80.0);
 		//setSpeed(3,20.0);
 		//setSpeed(3,80.0);
-		HAL_Delay(1000);
+		//HAL_Delay(1000);
 		//setSpeed(1,-20.0);
 		//setSpeed(2,-80.0);
 		//setSpeed(3,-20.0);
 		//setSpeed(3,-80.0);
-		HAL_Delay(1000);
+		//HAL_Delay(1000);
 		//char* ch="hello,world";
 		//HAL_UART_Transmit(&huart2,(uint8_t*)ch,11,HAL_MAX_DELAY);
 		//HAL_Delay(1000);
@@ -267,7 +305,37 @@ void setSpeed(uint8_t idx, double speed){
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==TIM7){
-		int16_t curCnt[4],speed[4];
+		//float curZAngle=angle.z;
+		float vx=30*(float)sin((double)zAnglePid.goal*3.1415926/180.0), vy=30*(float)cos((double)zAnglePid.goal*3.1415926/180.0);
+		zAnglePid.goal-=1.6f;
+		if(zAnglePid.goal>=180.0f) zAnglePid.goal=-180;
+		
+		float zAngleErr=angle.z-zAnglePid.goal;
+		
+		if(zAngleErr>180.0f){
+			zAngleErr-=360.0f;
+		}
+		if(zAngleErr<-180.0f){
+			zAngleErr+=360.0f;
+		}
+		double goal1,goal2,goal3,goal4;
+		goal1=goal2=goal3=goal4=0;
+		double zAngleTht=pid_calculate(&zAnglePid,zAnglePid.goal+zAngleErr);
+		//double zAngleTht=0;
+		if(zAngleTht>60) zAngleTht=60.0f;
+		if(zAngleTht<-60) zAngleTht=-60.0f;
+		
+		goal3+=zAngleTht+vx+vy;
+		goal4+=zAngleTht-vx+vy;
+		goal1-=zAngleTht-vx-vy;
+		goal2-=zAngleTht+vx-vy;
+		
+		speedPid[0].goal=goal1;
+		speedPid[1].goal=goal2;
+		speedPid[2].goal=goal3;
+		speedPid[3].goal=goal4;
+		
+		
 		curCnt[0]=__HAL_TIM_GET_COUNTER(&htim1);
 		curCnt[1]=__HAL_TIM_GET_COUNTER(&htim2);
 		curCnt[2]=__HAL_TIM_GET_COUNTER(&htim3);
@@ -279,19 +347,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 			lastCnt[i]=curCnt[i];
 		}
 	
-		double tht1=pid_calculate(&speedPid[0], speed[2]);
-		double tht2=pid_calculate(&speedPid[1], speed[1]);
-		double tht3=pid_calculate(&speedPid[2], -speed[0]);
-		double tht4=pid_calculate(&speedPid[3], -speed[3]);
+		double tht1=pid_calculate(&speedPid[0], -(float)speed[2]);
+		double tht2=pid_calculate(&speedPid[1], (float)speed[1]);
+		double tht3=pid_calculate(&speedPid[2], (float)speed[3]);
+		double tht4=pid_calculate(&speedPid[3], -(float)speed[0]);
 		
-		tht1=0;
-		tht2=0;
-		tht3=0;
-		//tht4=0;
+		//tht1=0;
+		//tht2=0;
+		//tht3=0;
+		//tht4=40;
 		
 		if(tht1>70){tht1=70;}
 		if(tht1<-70){tht1=-70;}
-		setSpeed(1,tht1);
+		setSpeed(1,-tht1);
 		
 		if(tht2>70){tht2=70;}
 		if(tht2<-70){tht2=-70;}
@@ -299,14 +367,65 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		
 		if(tht3>70){tht3=70;}
 		if(tht3<-70){tht3=-70;}
-		setSpeed(4,-tht3);
-		
+		setSpeed(3,-tht3);
 		
 		if(tht4>70){tht4=70;}
-		if(tht4<-70){tht4=-70;}printf("speed:%d,tht:%f\n", speed[3], tht4);
-		//setSpeed(3,-tht4);
+		if(tht4<-70){tht4=-70;}
+		setSpeed(4,-tht4);
 	}
 }
+
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+	{
+		
+		//printf("%d\n", Size);
+		//HAL_UART_Transmit(&huart1,buff,Size,0xFFFFFFFFU);
+		//float pit;
+		
+		int idx=0;
+		int i=0;
+		while(idx<Size){
+			while(jy62_buff[idx]!=0x55) ++idx;
+			uint8_t sum=0;
+			for(i=0;i<10;++i) sum+=jy62_buff[idx+i];
+			if(sum==jy62_buff[idx+10]){
+				if(jy62_buff[idx+1]==0x51){
+					int16_t tmp1,tmp2;
+					tmp1=jy62_buff[idx+3],tmp2=jy62_buff[idx+2];
+					acc.x=(float)((tmp1<<8)+tmp2)*16.0*g/32768.0;
+					tmp1=jy62_buff[idx+5],tmp2=jy62_buff[idx+4];
+					acc.y=(float)((tmp1<<8)+tmp2)*16.0*g/32768.0;
+					tmp1=jy62_buff[idx+7],tmp2=jy62_buff[idx+6];
+					acc.z=(float)((tmp1<<8)+tmp2)*16.0*g/32768.0;
+					
+					if(acc.x>=16*g) acc.x-=32*g;
+					if(acc.y>=16*g) acc.y-=32*g;
+					if(acc.z>=16*g) acc.z-=32*g;
+				}else if(jy62_buff[idx+1]==0x52){
+					vel.x=(float)(((short)jy62_buff[idx+3]<<8)+(short)jy62_buff[idx+2]) * 2000.0/32768.0;
+					vel.y=(float)(((short)jy62_buff[idx+5]<<8)+(short)jy62_buff[idx+4]) * 2000.0/32768.0;
+					vel.z=(float)(((short)jy62_buff[idx+7]<<8)+(short)jy62_buff[idx+6]) * 2000.0/32768.0;
+					if(vel.z>2000) vel.z-=4000;
+				}else if(jy62_buff[idx+1]==0x53){
+					angle.x=(float)(((short)jy62_buff[idx+3]<<8)+(short)jy62_buff[idx+2])*180.0/32768.0;
+					angle.y=(float)(((short)jy62_buff[idx+5]<<8)+(short)jy62_buff[idx+4])*180.0/32768.0;
+					angle.z=(float)(((short)jy62_buff[idx+7]<<8)+(short)jy62_buff[idx+6])*180.0/32768.0;
+					
+					angle.x=angle.x>180.0?angle.x-360.0:angle.x;
+					angle.y=angle.y>180.0?angle.y-360.0:angle.y;
+					angle.z=angle.z>180.0?angle.z-360.0:angle.z;
+				}else if(jy62_buff[idx+1]==0x56){
+					height=((uint32_t)jy62_buff[idx+9]<<24)+((uint32_t)jy62_buff[idx+8]<<16)+((uint32_t)jy62_buff[idx+7]<<8)+(uint32_t)jy62_buff[idx+6];
+				}
+				idx+=11;
+			}else{
+				idx++;
+			}
+			HAL_UARTEx_ReceiveToIdle_DMA(&huart3,jy62_buff,200);
+		}
+	}
+}
+
 /* USER CODE END 4 */
 
 /**

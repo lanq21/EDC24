@@ -1,8 +1,10 @@
 --cpu=Cortex-M4.fp.sp
 "test1\startup_stm32f407xx.o"
 "test1\pid.o"
+"test1\jy62.o"
 "test1\main.o"
 "test1\gpio.o"
+"test1\dma.o"
 "test1\tim.o"
 "test1\usart.o"
 "test1\stm32f4xx_it.o"
