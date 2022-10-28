@@ -49,9 +49,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-int16_t lastCnt[4];
+int32_t lastCnt[4];
 pid speedPid[6];
-int16_t curCnt[4],speed[4];
+int32_t curCnt[4],speed[4];
+float coff=0.4f;
 
 pid zAnglePid;
 
@@ -163,6 +164,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	uint32_t idx=0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -172,7 +174,19 @@ int main(void)
 		//setSpeed(2,20);
 		//setSpeed(3,30);
 		//setSpeed(4,40);
-		printf("goal:%f,actual:%f,err:%f\n", zAnglePid.goal, angle.z,zAnglePid.err);
+		/*if(idx%200<100){
+			setSpeed(3,20);
+			setSpeed(1,20);
+			setSpeed(2,20);
+			setSpeed(4,20);
+		}else{
+			setSpeed(3,-20);
+			setSpeed(1,-20);
+			setSpeed(2,-20);
+			setSpeed(4,-20);
+		}
+		idx++;*/
+		printf("speed:%d\n", speed[3]);
 		HAL_Delay(10);
 		/*
 		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,0);
@@ -302,13 +316,18 @@ void setSpeed(uint8_t idx, double speed){
 		__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_4,2000*speed/100);
 	}
 }
-
+double ag=0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==TIM7){
 		//float curZAngle=angle.z;
-		float vx=30*(float)sin((double)zAnglePid.goal*3.1415926/180.0), vy=30*(float)cos((double)zAnglePid.goal*3.1415926/180.0);
+		float vx=30*(float)sin((double)ag*3.1415926/180.0), vy=30*(float)cos((double)ag*3.1415926/180.0);
+		ag+=1.0;
+		
+		/*
 		zAnglePid.goal-=1.6f;
-		if(zAnglePid.goal>=180.0f) zAnglePid.goal=-180;
+		if(zAnglePid.goal<-180.0f) zAnglePid.goal=180;
+		if(zAnglePid.goal>180.0f) zAnglePid.goal=-180;
+		*/
 		
 		float zAngleErr=angle.z-zAnglePid.goal;
 		
@@ -336,16 +355,43 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		speedPid[3].goal=goal4;
 		
 		
-		curCnt[0]=__HAL_TIM_GET_COUNTER(&htim1);
-		curCnt[1]=__HAL_TIM_GET_COUNTER(&htim2);
-		curCnt[2]=__HAL_TIM_GET_COUNTER(&htim3);
-		curCnt[3]=__HAL_TIM_GET_COUNTER(&htim4);
+		int32_t tmp;
+		tmp=__HAL_TIM_GET_COUNTER(&htim1);
+		if(tmp>=32768) tmp-=65536;
+		speed[0]=coff*(float)tmp+(1-coff)*speed[0];
 		
+		tmp=__HAL_TIM_GET_COUNTER(&htim2);
+		if(tmp>=32768) tmp-=65536;
+		speed[1]=coff*(float)tmp+(1-coff)*speed[1];
+		
+		tmp=__HAL_TIM_GET_COUNTER(&htim3);
+		if(tmp>=32768) tmp-=65536;
+		speed[2]=coff*(float)tmp+(1-coff)*speed[2];
+		
+		tmp=__HAL_TIM_GET_COUNTER(&htim4);
+		if(tmp>=32768) tmp-=65536;
+		speed[3]=coff*(float)tmp+(1-coff)*speed[3];
+		
+		
+		/*speed[0]=__HAL_TIM_GET_COUNTER(&htim1);
+		speed[1]=__HAL_TIM_GET_COUNTER(&htim2);
+		speed[2]=__HAL_TIM_GET_COUNTER(&htim3);
+		speed[3]=__HAL_TIM_GET_COUNTER(&htim4);*/
+		
+		for(uint8_t i=0;i<4;++i){
+			if(speed[i]>=32768) speed[i]-=65536;
+		}
+		
+		__HAL_TIM_SetCounter(&htim1,0);
+		__HAL_TIM_SetCounter(&htim2,0);
+		__HAL_TIM_SetCounter(&htim3,0);
+		__HAL_TIM_SetCounter(&htim4,0);
+		/*
 		for(uint8_t i=0;i<4;++i){
 			speed[i]=curCnt[i]-lastCnt[i];
 			//if(i==2) speed[i]=-speed[1];
 			lastCnt[i]=curCnt[i];
-		}
+		}*/
 	
 		double tht1=pid_calculate(&speedPid[0], -(float)speed[2]);
 		double tht2=pid_calculate(&speedPid[1], (float)speed[1]);
