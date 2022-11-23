@@ -643,6 +643,26 @@
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>Dijstra.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\Dijstra.c</FilePath>
+            </File>
+            <File>
+              <FileName>drive.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\drive.c</FilePath>
+            </File>
+            <File>
+              <FileName>graph.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\graph.c</FilePath>
+            </File>
+            <File>
+              <FileName>zigbee_edc24.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\zigbee_edc24.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
