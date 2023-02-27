@@ -405,6 +405,26 @@
               <FilePath>..\Core\Src\jy62.c</FilePath>
             </File>
             <File>
+              <FileName>drive.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\drive.c</FilePath>
+            </File>
+            <File>
+              <FileName>zigbee_edc24.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\zigbee_edc24.c</FilePath>
+            </File>
+            <File>
+              <FileName>map.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\map.c</FilePath>
+            </File>
+            <File>
+              <FileName>Dijkstra.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\Dijkstra.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
@@ -642,26 +662,6 @@
               <FileName>stm32f4xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_msp.c</FilePath>
-            </File>
-            <File>
-              <FileName>Dijstra.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\Dijstra.c</FilePath>
-            </File>
-            <File>
-              <FileName>drive.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\drive.c</FilePath>
-            </File>
-            <File>
-              <FileName>zigbee_edc24.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\zigbee_edc24.c</FilePath>
-            </File>
-            <File>
-              <FileName>map.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\map.c</FilePath>
             </File>
           </Files>
         </Group>

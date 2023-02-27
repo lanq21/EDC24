@@ -1,5 +1,5 @@
 #include "drive.h"
-#include "Dijstra.h"
+#include "Dijkstra.h"
 #include "map.h"
 #include "zigbee_edc24.h"
 #include <math.h>
@@ -59,7 +59,7 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
         Position_edc24 position = getVehiclePos();
         uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
         uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
-        Dijstra(begin_index, end_index);
+        Dijkstra(begin_index, end_index);
         Drive_State = Going;
     }
     else if (Drive_State == Going)
