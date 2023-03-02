@@ -11,7 +11,7 @@ typedef struct
 {
     Position_edc24 p;
     int number;
-} Node;//?(??????,???)
+} Node;
 
 struct Edge
 {
@@ -20,6 +20,7 @@ struct Edge
     int weight;
 };
 
-
+extern Position_edc24* node_list;
+extern uint16_t node_list_size;
 
 #endif

@@ -1,40 +1,39 @@
 #include "Dijkstra.h"
 
 struct Edge {
-	uint16_t to, weight, next;
+	int to, weight, next;
 }e[MAX_EDGE];
-uint16_t head[MAX_EDGE];
+int head[MAX_EDGE];
 
 char vis[MAX_NODE];
 
-uint16_t dij2prque[MAX_NODE];
-
-uint16_t node_cnt = 0;
+int dij2prque[MAX_NODE];
+int node_cnt = 0;
 
 struct Dij_Node {
-	uint16_t x;
-	uint16_t dis;
+	int x;
+	int dis;
 };
 
 struct priority_queue {
 	struct Dij_Node nodes[PRIORITY_QUEUE_MAX_SIZE];
-	uint16_t cnt;
+	int cnt;
 };
 
 struct priority_queue djq;
 
-uint16_t minTree[MAX_NODE];//zuiDuanLuJingShu
-uint16_t stack[MAX_NODE];
-uint16_t stack_top = 0;
+int minTree[MAX_NODE];//zuiDuanLuJingShu
+int stack[MAX_NODE];
+int stack_top = 0;
 
 /*priority_queue*/
 void priority_queue_init(struct priority_queue* pq) {
 	pq->cnt = 1;
 }
 
-void priority_queue_swap_node(struct priority_queue* pq, uint16_t x, uint16_t y) {
+void priority_queue_swap_node(struct priority_queue* pq, int x, int y) {
 	struct Dij_Node tmp = pq->nodes[x];
-	uint16_t temp;
+	int temp;
 	pq->nodes[x] = pq->nodes[y];
 	pq->nodes[y] = tmp;
 
@@ -43,8 +42,8 @@ void priority_queue_swap_node(struct priority_queue* pq, uint16_t x, uint16_t y)
 	dij2prque[pq->nodes[y].x] = temp;
 }
 
-void priority_queue_up(struct priority_queue* pq, uint16_t cur) {
-	uint16_t fa = cur / 2;
+void priority_queue_up(struct priority_queue* pq, int cur) {
+	int fa = cur / 2;
 	if (cur == 1) return;
 	if (pq->nodes[cur].dis < pq->nodes[fa].dis) {
 		priority_queue_swap_node(pq, fa, cur);
@@ -52,12 +51,12 @@ void priority_queue_up(struct priority_queue* pq, uint16_t cur) {
 	}
 }
 
-void priority_queue_update_weight(struct priority_queue* pq, uint16_t x, uint16_t newDis) {
-	uint16_t nodeNum = dij2prque[x];
+void priority_queue_update_weight(struct priority_queue* pq, int x, int newDis) {
+	int nodeNum = dij2prque[x];
 	pq->nodes[nodeNum].dis = newDis;
 	priority_queue_up(pq, nodeNum);
 }
-void priority_queue_insert(struct priority_queue* pq, uint16_t x, uint16_t dis) {
+void priority_queue_insert(struct priority_queue* pq, int x, int dis) {
 	pq->nodes[pq->cnt].x = x;
 	pq->nodes[pq->cnt].dis = dis;
 	dij2prque[x] = pq->cnt;
@@ -65,8 +64,8 @@ void priority_queue_insert(struct priority_queue* pq, uint16_t x, uint16_t dis) 
 	pq->cnt++;
 	return;
 }
-void priority_queue_down(struct priority_queue* pq, uint16_t x) {
-	uint16_t l, r;
+void priority_queue_down(struct priority_queue* pq, int x) {
+	int l, r;
 	if (x * 2 + 1 < pq->cnt) {
 		l = pq->nodes[x * 2].dis;
 		r = pq->nodes[x * 2 + 1].dis;
@@ -93,13 +92,13 @@ void priority_queue_delete(struct priority_queue* pq) {
 }
 
 /*dijkstra*/
-void Dijkstra(uint16_t s, uint16_t t) {
+void Dijkstra(int s, int t) {
 	priority_queue_init(&djq);
 
-	for (uint16_t i = 1; i <= node_cnt; ++i) vis[i] = 0;
-	for (uint16_t i = 1; i <= node_cnt; ++i) minTree[i] = 0;
+	for (int i = 1; i <= node_cnt; ++i) vis[i] = 0;
+	for (int i = 1; i <= node_cnt; ++i) minTree[i] = 0;
 
-	for (uint16_t i = 1; i <= node_cnt; ++i) {
+	for (int i = 1; i <= node_cnt; ++i) {
 		if (i == s) priority_queue_insert(&djq, i, 0);
 		else priority_queue_insert(&djq, i, inf);
 	}
@@ -123,7 +122,7 @@ void Dijkstra(uint16_t s, uint16_t t) {
 			}
 		}
 	}
-	uint16_t ptr = t;
+	int ptr = t;
 	stack_top = 0;
 	while (ptr != s&&ptr!=0) {
 		stack[stack_top++] = ptr;
@@ -133,17 +132,10 @@ void Dijkstra(uint16_t s, uint16_t t) {
 	return;
 }
 
-uint16_t edge_cnt = 1;
-void add(uint16_t a, uint16_t b, uint16_t c) {
+int edge_cnt = 1;
+void add(int a, int b, int c) {
 	e[edge_cnt].weight = c;
 	e[edge_cnt].to = b;
 	e[edge_cnt].next = head[a];
 	head[a] = edge_cnt++;
-}
-
-void clear_edge(){
-	edge_cnt = 1;
-	for(int i = 0; i<MAX_NODE; ++i){
-		head[i] = 0;
-	}
 }

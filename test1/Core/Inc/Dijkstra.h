@@ -2,14 +2,17 @@
 #define _DIJKSTRA_H_
 
 #include "stm32f4xx_hal.h"
-#define inf 2147483647
-#define MAX_EDGE 2000
-#define MAX_NODE 1000
-#define PRIORITY_QUEUE_MAX_SIZE 1000
+#define inf 65535
+#define MAX_EDGE 800
+#define MAX_NODE 250
+#define PRIORITY_QUEUE_MAX_SIZE 800
 
-extern int stack[MAX_NODE];
-extern int stack_top;
+extern uint16_t stack[MAX_NODE];
+extern uint16_t stack_top;
 
-void Dijkstra(int begin_index, int end_index);
+void Dijkstra(uint16_t begin_index, uint16_t end_index);
+void add(uint16_t a, uint16_t b, uint16_t c);
+void clear_edge();
+
 
 #endif

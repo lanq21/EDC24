@@ -10,11 +10,6 @@ float drive_angle_goal;
 uint8_t only_deliver;
 enum Drive_State_Type Drive_State;
 
-//extern Position_edc24* node_list;
-//extern uint16_t node_list_size;
-extern Position_edc24 Node_List[num * num];
-extern uint16_t node_cnt;
-
 float Get_Distance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
@@ -24,9 +19,9 @@ uint16_t Get_Nearby_Node(uint16_t x, uint16_t y)
 {
     float min_distance = 1e30;
     uint16_t min_index;
-    for (uint16_t index = 0; index < node_cnt; index++)
+    for (uint16_t index = 0; index < node_list_size; index++)
     {
-        float distance = Get_Distance(Node_List[index].x, Node_List[index].y, x, y);
+        float distance = Get_Distance(node_list[index].x, node_list[index].y, x, y);
         if (distance < min_distance)
         {
             min_distance = distance;
@@ -69,16 +64,16 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
     }
     else if (Drive_State == Going)
     {
-        if (index == 0)
+        if (index == stack_top)
             Drive_State = Approaching;
         else
         {
             Position_edc24 position = getVehiclePos();
-            x_step_goal = Node_List[stack[stack_top - 1 - index]].x;
-            y_step_goal = Node_List[stack[stack_top - 1 - index]].y;
+            x_step_goal = node_list[stack[stack_top - 1 - index]].x;
+            y_step_goal = node_list[stack[stack_top - 1 - index]].y;
             float distance = Get_Distance(position.x, position.y, x_step_goal, y_step_goal);
             if (distance < Distance_Threshold__Next_Node)
-                --index;
+                index++;
             else
             {
                 drive_velocity_x_goal = Speed * (float)(x_step_goal - position.x) / distance;
