@@ -29,6 +29,10 @@
 #include<stdio.h>
 #include "pid.h"
 #include "jy62.h"
+#include "zigbee_edc24.h"
+#include "map.h"
+#include "drive.h"
+#include "Dijkstra.h"
 #include <math.h>
 /* USER CODE END Includes */
 
@@ -61,12 +65,17 @@ extern struct vec acc,angle,vel;
 extern uint32_t height;
 extern float g;
 
+extern float drive_velocity_x_goal;
+extern float drive_velocity_y_goal;
+
 enum stateValue{
 	running,
 	calibrating,
 	stop
 };
 uint8_t state=stop;
+
+extern uint8_t receive_flag;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -160,12 +169,16 @@ int main(void)
 	
 	pid_init(&zAnglePid,1.0f,0.08f,0.01f);
 	zAnglePid.goal=0;
+	//u1_printf("hello");
+	
+	zigbee_Init(&huart2);
 	
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	uint32_t idx=0;
+	uint8_t built=0;
   while (1)
   {
     /* USER CODE END WHILE */
@@ -187,41 +200,35 @@ int main(void)
 			setSpeed(4,-20);
 		}
 		idx++;*/
-		HAL_Delay(10);
-		/*
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_6,0);
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_7,1);
-
-		__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_4,200);
-		
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_8,0);
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_9,1);
-
-		__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_3,200);
-		
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_0,1);
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_1,0);
-
-		__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_2,200);
-		
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_2,1);
-		HAL_GPIO_WritePin(GPIOC,GPIO_PIN_3,0);
-
-		__HAL_TIM_SetCompare(&htim5,TIM_CHANNEL_1,200);*/
-	
-		//setSpeed(1,20.0);
-		//setSpeed(2,80.0);
-		//setSpeed(3,20.0);
-		//setSpeed(3,80.0);
-		//HAL_Delay(1000);
-		//setSpeed(1,-20.0);
-		//setSpeed(2,-80.0);
-		//setSpeed(3,-20.0);
-		//setSpeed(3,-80.0);
-		//HAL_Delay(1000);
-		//char* ch="hello,world";
-		//HAL_UART_Transmit(&huart2,(uint8_t*)ch,11,HAL_MAX_DELAY);
-		//HAL_Delay(1000);
+		 if(receive_flag)
+			{
+			//u1_printf("6\n");
+			//u1_printf("hello111");
+      reqGameInfo();
+			//u1_printf("hello222");
+      zigbeeMessageRecord();
+			//u1_printf("hello333");
+      if(!built){
+				Barrier_edc24 b=getOneBarrier(0);
+				if(b.pos_1.x!=0){
+					built=1;
+					BuildMap();
+					//Position_edc24 tmppos=getVehiclePos();
+					
+					//uint16_t curNode=Get_Nearby_Node(tmppos.x, tmppos.y);
+				}
+				
+			}
+			
+    }else{
+			
+		}
+		if(built){
+				Go_to(250,100);
+			
+					//u1_printf("car:%d, %d\n", tmppos.x, tmppos.y);
+					//uint16_t curNode=Get_Nearby_Node(tmppos.x, tmppos.y);
+			}
   }
   /* USER CODE END 3 */
 }
@@ -319,9 +326,9 @@ double ag=0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==TIM7){
 		//float curZAngle=angle.z;
-		//float vx=30*(float)sin((double)ag*3.1415926/180.0), vy=30*(float)cos((double)ag*3.1415926/180.0);
-		float vx=0.0f, vy=0.0f;
-		ag+=1.0;
+		//float vx=80*(float)sin((double)ag*3.1415926/180.0), vy=80*(float)cos((double)ag*3.1415926/180.0);
+		float vx=0, vy=0;
+		ag+=2.0;
 		
 		/*
 		zAnglePid.goal-=1.6f;
@@ -422,8 +429,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 }
 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
+{
+	if(huart->Instance==USART2)
+  {
+    receive_flag=1;
+  }
+	else if(huart->Instance==USART3)
 	{
-		
 		//printf("%d\n", Size);
 		//HAL_UART_Transmit(&huart1,buff,Size,0xFFFFFFFFU);
 		//float pit;
@@ -468,6 +480,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 				idx++;
 			}
 			HAL_UARTEx_ReceiveToIdle_DMA(&huart3,jy62_buff,200);
+			}
 		}
 	}
 }

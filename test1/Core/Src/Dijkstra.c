@@ -96,10 +96,10 @@ void priority_queue_delete(struct priority_queue* pq) {
 void Dijkstra(uint16_t s, uint16_t t) {
 	priority_queue_init(&djq);
 
-	for (uint16_t i = 1; i <= node_cnt; ++i) vis[i] = 0;
-	for (uint16_t i = 1; i <= node_cnt; ++i) minTree[i] = 0;
+	for (int16_t i = 1; i <= node_cnt; ++i) vis[i] = 0;
+	for (int16_t i = 1; i <= node_cnt; ++i) minTree[i] = 0;
 
-	for (uint16_t i = 1; i <= node_cnt; ++i) {
+	for (int16_t i = 1; i <= node_cnt; ++i) {
 		if (i == s) priority_queue_insert(&djq, i, 0);
 		else priority_queue_insert(&djq, i, inf);
 	}
@@ -116,14 +116,14 @@ void Dijkstra(uint16_t s, uint16_t t) {
 		if (vis[minx]) continue;
 		tmp++;
 		vis[minx] = 1;
-		for (int i = head[minx]; i; i = e[i].next) {
+		for (int16_t i = head[minx]; i; i = e[i].next) {
 			if (djq.nodes[dij2prque[minx]].dis + e[i].weight < djq.nodes[dij2prque[e[i].to]].dis) {
 				priority_queue_update_weight(&djq, e[i].to, djq.nodes[dij2prque[minx]].dis + e[i].weight);
 				minTree[e[i].to] = minx;
 			}
 		}
 	}
-	uint16_t ptr = t;
+	int16_t ptr = t;
 	stack_top = 0;
 	while (ptr != s&&ptr!=0) {
 		stack[stack_top++] = ptr;

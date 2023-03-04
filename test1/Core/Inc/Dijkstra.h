@@ -2,7 +2,7 @@
 #define _DIJKSTRA_H_
 
 #include "stm32f4xx_hal.h"
-#define inf 65535
+#define inf 30000
 #define MAX_EDGE 800
 #define MAX_NODE 250
 #define PRIORITY_QUEUE_MAX_SIZE 800

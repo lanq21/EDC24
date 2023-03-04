@@ -2,6 +2,7 @@
 #include "Dijkstra.h"
 #include "map.h"
 #include "zigbee_edc24.h"
+#include "usart.h"
 #include <math.h>
 
 float drive_velocity_x_goal;
@@ -15,16 +16,16 @@ enum Drive_State_Type Drive_State;
 extern Position_edc24 Node_List[num * num];
 extern uint16_t node_cnt;
 
-float Get_Distance(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
+float Get_Distance(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
 uint16_t Get_Nearby_Node(uint16_t x, uint16_t y)
 {
-    float min_distance = 1e30;
+    float min_distance = 1e5;
     uint16_t min_index;
-    for (uint16_t index = 0; index < node_cnt; index++)
+    for (uint16_t index = 1; index <= node_cnt; index++)
     {
         float distance = Get_Distance(Node_List[index].x, Node_List[index].y, x, y);
         if (distance < min_distance)
@@ -61,10 +62,16 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
     if (Drive_State == Ready)
     {
         index = 0;
-        Position_edc24 position = getVehiclePos();
-        uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
+        //Position_edc24 position = getVehiclePos();
+        Position_edc24 position;
+				position.x=0;position.y=120;
+				uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
         uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
+				//u1_printf("%d,%d\n%d,%d\n", Node_List[begin_index].x, Node_List[begin_index].y, Node_List[end_index].x, Node_List[end_index].y);
         Dijkstra(begin_index, end_index);
+				for(int16_t i=stack_top-1;i>=0;--i){
+					u1_printf("%d,%d\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
+				}
         Drive_State = Going;
     }
     else if (Drive_State == Going)

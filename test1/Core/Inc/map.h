@@ -21,5 +21,5 @@ struct Edge
 };
 
 
-
+void BuildMap();
 #endif

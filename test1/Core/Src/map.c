@@ -3,6 +3,7 @@
 //#include<iostream>
 #include<stdint.h>
 #include<stdlib.h>
+#include "usart.h"
 #include "zigbee_edc24.h"
 #include "Dijkstra.h"
 #include "map.h"
@@ -76,7 +77,8 @@ void Init_Coordinate() //障碍物位置坐标初始化
     uint16_t num_0=0;
     for (i = 0; i < barrier_num; i++)//从上位机获取生成的障碍物位置信息
     {
-        //barrier[i]=getgetOneBarrier(barrierNo)
+        barrier[i]=getOneBarrier(i);
+			//u1_printf("%dok:%d,%d\n", i, barrier[i].pos_1.x, barrier[i].pos_1.y);
         //这里需要加代码
         //有一个要求，是各个障碍物是单独发送的，不过这个情况肯定成立
         //x_temp[3~12]是x方向的各个点的横坐标值,y_temp同理;
@@ -168,7 +170,7 @@ void BuildMap(){
   uint16_t i = 0, j = 0;
 	
 	//edge_num = 0;
-	node_cnt = 0;
+	node_cnt = 1;
 	
   int temp_node_x = 0, temp_node_y = 0;
 	//建交叉点
@@ -206,6 +208,8 @@ void BuildMap(){
 							//edge_num++;
 							add(node[j][i].number, node[j + 1][i].number, node[j + 1][i].p.x - node[j][i].p.x);
 							add(node[j + 1][i].number, node[j][i].number, node[j + 1][i].p.x - node[j][i].p.x);
+						//u1_printf("%d,%d,%d,%d\n", node[j][i].p.x, node[j][i].p.y, node[j+1][i].p.x, node[j+1][i].p.y);
+						//HAL_Delay(10);
 					}
 			}
 	}
@@ -224,7 +228,10 @@ void BuildMap(){
 							//edge_num++;
 							add(node[j][i].number, node[j][i + 1].number, node[j][i + 1].p.y - node[j][i].p.y);
 							add(node[j][i + 1].number, node[j][i].number, node[j][i + 1].p.y - node[j][i].p.y);
+						//u1_printf("%d,%d,%d,%d\n", node[j][i].p.x, node[j][i].p.y, node[j][i+1].p.x, node[j][i+1].p.y);
+						//HAL_Delay(10);
 					}
 			}
 	}
+	//u1_printf("ok:%d\n", node_cnt);
 }
