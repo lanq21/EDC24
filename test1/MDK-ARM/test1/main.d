@@ -34,4 +34,6 @@ test1/main.o: ..\Core\Src\main.c ..\Core\Inc\main.h \
   ..\Core\Inc\dma.h ..\Core\Inc\tim.h ..\Core\Inc\usart.h \
   ..\Core\Inc\gpio.h C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\string.h \
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\stdio.h ..\Core\Inc\pid.h \
-  ..\Core\Inc\jy62.h C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\math.h
+  ..\Core\Inc\jy62.h ..\Core\Inc\zigbee_edc24.h ..\Core\Inc\map.h \
+  ..\Core\Inc\drive.h ..\Core\Inc\Dijkstra.h \
+  C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\math.h

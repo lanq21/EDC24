@@ -31,6 +31,7 @@ test1/drive.o: ..\Core\Src\drive.c ..\Core\Inc\drive.h \
   ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim.h \
   ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_tim_ex.h \
   ..\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_uart.h \
-  ..\Core\Inc\Dijkstra.h ..\Core\Inc\map.h ..\Core\Inc\zigbee_edc24.h \
-  C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\string.h \
+  ..\Core\Inc\zigbee_edc24.h \
+  C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\string.h ..\Core\Inc\Dijkstra.h \
+  ..\Core\Inc\map.h ..\Core\Inc\usart.h ..\Core\Inc\main.h \
   C:\Keil_v5\ARM\ARMCLANG\Bin\..\include\math.h

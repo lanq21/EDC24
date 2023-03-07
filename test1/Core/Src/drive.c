@@ -5,14 +5,14 @@
 #include "usart.h"
 #include <math.h>
 
-float drive_velocity_x_goal;
-float drive_velocity_y_goal;
+float drive_velocity_goal;
 float drive_angle_goal;
-uint8_t only_deliver;
-enum Drive_State_Type Drive_State;
+uint8_t drive_only_deliver;
+enum Drive_State_Type drive_state;
+Position_edc24 charge_pile[5] = {{80, 80}, {80, 160}, {160, 80}, {160, 160}, {120, 120}};
 
-//extern Position_edc24* node_list;
-//extern uint16_t node_list_size;
+// extern Position_edc24* node_list;
+// extern uint16_t node_list_size;
 extern Position_edc24 Node_List[num * num];
 extern uint16_t node_cnt;
 
@@ -48,36 +48,38 @@ void Set_Angle_Goal()
 
 void Drive_Init()
 {
-    drive_velocity_x_goal = 0;
-    drive_velocity_y_goal = 0;
+    drive_velocity_goal = 0;
     drive_angle_goal = 0;
-    only_deliver = 0;
-    Drive_State = Ready;
+    drive_only_deliver = 0;
+    drive_state = Ready;
 }
 
 void Go_to(uint16_t x_goal, uint16_t y_goal)
 {
+    drive_velocity_goal = Drive_Speed;
     static uint16_t index;
     static uint16_t x_step_goal, y_step_goal;
-    if (Drive_State == Ready)
+    if (drive_state == Ready)
     {
         index = 0;
-        //Position_edc24 position = getVehiclePos();
+        // Position_edc24 position = getVehiclePos();
         Position_edc24 position;
-				position.x=0;position.y=120;
-				uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
+        position.x = 0;
+        position.y = 120;
+        uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
         uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
-				//u1_printf("%d,%d\n%d,%d\n", Node_List[begin_index].x, Node_List[begin_index].y, Node_List[end_index].x, Node_List[end_index].y);
+        // u1_printf("%d,%d\n%d,%d\n", Node_List[begin_index].x, Node_List[begin_index].y, Node_List[end_index].x, Node_List[end_index].y);
         Dijkstra(begin_index, end_index);
-				for(int16_t i=stack_top-1;i>=0;--i){
-					u1_printf("%d,%d\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
-				}
-        Drive_State = Going;
+        for (int16_t i = stack_top - 1; i >= 0; --i)
+        {
+            u1_printf("%d,%d\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
+        }
+        drive_state = Going;
     }
-    else if (Drive_State == Going)
+    else if (drive_state == Going)
     {
         if (index == 0)
-            Drive_State = Approaching;
+            drive_state = Approaching;
         else
         {
             Position_edc24 position = getVehiclePos();
@@ -88,21 +90,39 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
                 --index;
             else
             {
-                drive_velocity_x_goal = Speed * (float)(x_step_goal - position.x) / distance;
-                drive_velocity_y_goal = Speed * (float)(y_step_goal - position.y) / distance;
+                drive_angle_goal = atan2(y_step_goal - position.y, x_step_goal - position.x) * 180 / 3.1415926 + 90;
+                // 可能要改正负号
+                if (drive_angle_goal > 180)
+                    drive_angle_goal -= 360;
             }
         }
     }
-    else if (Drive_State == Approaching)
+    else if (drive_state == Approaching)
     {
         Position_edc24 position = getVehiclePos();
         float distance = Get_Distance(position.x, position.y, x_goal, y_goal);
         if (distance < Distance_Threshold__Next_Node)
-            Drive_State = Ready;
+            drive_state = Ready;
         else
         {
-            drive_velocity_x_goal = Speed * (float)(x_goal - position.x) / distance;
-            drive_velocity_y_goal = Speed * (float)(y_goal - position.y) / distance;
+            drive_angle_goal = atan2(y_goal - position.y, x_goal - position.x) * 180 / 3.1415926 + 90;
+            // 可能要改正负号
+            if (drive_angle_goal > 180)
+                drive_angle_goal -= 360;
+        }
+    }
+}
+
+void Set_Charge_Pile()
+{
+    for (uint8_t i = 0; i < 5; i++)
+    {
+        Go_to(charge_pile[i].x, charge_pile[i].y);
+        if (drive_state == Approaching)
+        {
+            setChargingPile();
+            charge_pile[i] = getVehiclePos();
+            drive_state = Ready;
         }
     }
 }
@@ -115,24 +135,24 @@ void Drive()
     {
     case FirstHalf:
         if (getGameTime() + Time_Threshold__Only_Deliver < getHalfGameDuration())
-            only_deliver = 1;
+            drive_only_deliver = 1;
         break;
     case SecondHalf:
         if (getGameTime() + Time_Threshold__Only_Deliver < getHalfGameDuration() + 60000)
-            only_deliver = 1;
+            drive_only_deliver = 1;
         break;
     default:
         return;
     }
     static uint16_t x_goal, y_goal;
-    if (Drive_State == Ready)
+    if (drive_state == Ready)
     {
         uint32_t battery_life = getRemainDist();
         uint8_t charging_pile_num = getOwnChargingPileNum();
         if (charging_pile_num && battery_life < RemainDistance_Threshold__Charge)
         {
             // charge
-            float min_distance = 1e30;
+            float min_distance = 1e8;
             uint8_t min_index;
             Position_edc24 vehicle = getVehiclePos();
             for (uint8_t i = 0; i < charging_pile_num; i++)
@@ -171,7 +191,7 @@ void Drive()
                 }
                 if (order_num < 5 &&
                     min_cost > Cost_Threshold__Get_New_Order &&
-                    only_deliver == 0)
+                    drive_only_deliver == 0)
                 {
                     x_goal = getLatestPendingOrder().depPos.x;
                     y_goal = getLatestPendingOrder().depPos.y;

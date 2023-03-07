@@ -28,128 +28,40 @@ Project File Date:  03/02/2023
 *** Using Compiler 'V6.18', folder: 'C:\Keil_v5\ARM\ARMCLANG\Bin'
 Rebuild target 'test1'
 assembling startup_stm32f407xx.s...
-compiling jy62.c...
 compiling pid.c...
+compiling jy62.c...
 compiling zigbee_edc24.c...
 compiling drive.c...
 compiling Dijkstra.c...
 compiling map.c...
-compiling gpio.c...
 compiling dma.c...
-../Core/Src/main.c(129): warning: implicit declaration of function 'zigbee_Init' is invalid in C99 [-Wimplicit-function-declaration]
-        zigbee_Init(&huart2);
-        ^
-../Core/Src/main.c(176): error: use of undeclared identifier 'receive_flag'
-                if (receive_flag)
-                    ^
-../Core/Src/main.c(178): warning: implicit declaration of function 'reqGameInfo' is invalid in C99 [-Wimplicit-function-declaration]
-                        reqGameInfo();
-                        ^
-../Core/Src/main.c(179): warning: implicit declaration of function 'zigbeeMessageRecord' is invalid in C99 [-Wimplicit-function-declaration]
-                        zigbeeMessageRecord();
-                        ^
-../Core/Src/main.c(180): warning: implicit declaration of function 'u1_printf' is invalid in C99 [-Wimplicit-function-declaration]
-                        u1_printf("time:%d,gameStage:%d,gameStatus:%d,score:%f,posx:%d,posy:%d,remainDist:%d,halfTime:%d\n",
-                        ^
-../Core/Src/main.c(181): warning: implicit declaration of function 'getGameTime' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getGameTime(), (int32_t)getGameStage(), (int32_t)getGameStatus(), getScore(),
-                                          ^
-../Core/Src/main.c(181): warning: implicit declaration of function 'getGameStage' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getGameTime(), (int32_t)getGameStage(), (int32_t)getGameStatus(), getScore(),
-                                                                  ^
-../Core/Src/main.c(181): warning: implicit declaration of function 'getGameStatus' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getGameTime(), (int32_t)getGameStage(), (int32_t)getGameStatus(), getScore(),
-                                                                                           ^
-../Core/Src/main.c(181): warning: implicit declaration of function 'getScore' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getGameTime(), (int32_t)getGameStage(), (int32_t)getGameStatus(), getScore(),
-                                                                                                            ^
-../Core/Src/main.c(182): warning: implicit declaration of function 'getVehiclePos' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getVehiclePos().x, getVehiclePos().y, getRemainDist(), getHalfGameDuration());
-                                          ^
-../Core/Src/main.c(182): error: member reference base type 'int' is not a structure or union
-                                          getVehiclePos().x, getVehiclePos().y, getRemainDist(), getHalfGameDuration());
-                                          ~~~~~~~~~~~~~~~^~
-../Core/Src/main.c(182): error: member reference base type 'int' is not a structure or union
-                                          getVehiclePos().x, getVehiclePos().y, getRemainDist(), getHalfGameDuration());
-                                                             ~~~~~~~~~~~~~~~^~
-../Core/Src/main.c(182): warning: implicit declaration of function 'getRemainDist' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getVehiclePos().x, getVehiclePos().y, getRemainDist(), getHalfGameDuration());
-                                                                                ^
-../Core/Src/main.c(182): warning: implicit declaration of function 'getHalfGameDuration' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getVehiclePos().x, getVehiclePos().y, getRemainDist(), getHalfGameDuration());
-                                                                                                 ^
-../Core/Src/main.c(184): warning: implicit declaration of function 'getOwnChargingPileNum' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getOwnChargingPileNum(), getOppChargingPileNum(), getOrderNum(),
-                                          ^
-../Core/Src/main.c(184): warning: implicit declaration of function 'getOppChargingPileNum' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getOwnChargingPileNum(), getOppChargingPileNum(), getOrderNum(),
-                                                                   ^
-../Core/Src/main.c(184): warning: implicit declaration of function 'getOrderNum' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getOwnChargingPileNum(), getOppChargingPileNum(), getOrderNum(),
-                                                                                            ^
-../Core/Src/main.c(185): warning: implicit declaration of function 'getLatestPendingOrder' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getLatestPendingOrder().depPos.x, getLatestPendingOrder().depPos.y,
-                                          ^
-../Core/Src/main.c(185): error: member reference base type 'int' is not a structure or union
-                                          getLatestPendingOrder().depPos.x, getLatestPendingOrder().depPos.y,
-                                          ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-../Core/Src/main.c(185): error: member reference base type 'int' is not a structure or union
-                                          getLatestPendingOrder().depPos.x, getLatestPendingOrder().depPos.y,
-                                                                            ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-../Core/Src/main.c(186): error: member reference base type 'int' is not a structure or union
-                                          getLatestPendingOrder().desPos.x, getLatestPendingOrder().desPos.y,
-                                          ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-../Core/Src/main.c(186): error: member reference base type 'int' is not a structure or union
-                                          getLatestPendingOrder().desPos.x, getLatestPendingOrder().desPos.y,
-                                                                            ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-../Core/Src/main.c(187): error: member reference base type 'int' is not a structure or union
-                                          getLatestPendingOrder().timeLimit, getLatestPendingOrder().orderId, getLatestPendingOrder().commission,
-                                          ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
-../Core/Src/main.c(187): error: member reference base type 'int' is not a structure or union
-                                          getLatestPendingOrder().timeLimit, getLatestPendingOrder().orderId, getLatestPendingOrder().commission,
-                                                                             ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~
-../Core/Src/main.c(187): error: member reference base type 'int' is not a structure or union
-                                          getLatestPendingOrder().timeLimit, getLatestPendingOrder().orderId, getLatestPendingOrder().commission,
-                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
-../Core/Src/main.c(188): warning: implicit declaration of function 'getOneBarrier' is invalid in C99 [-Wimplicit-function-declaration]
-                                          getOneBarrier(0).pos_1.x, getOneBarrier(0).pos_1.y, getOneBarrier(0).pos_2.x, getOneBarrier(0).pos_2.y);
-                                          ^
-../Core/Src/main.c(188): error: member reference base type 'int' is not a structure or union
-                                          getOneBarrier(0).pos_1.x, getOneBarrier(0).pos_1.y, getOneBarrier(0).pos_2.x, getOneBarrier(0).pos_2.y);
-                                          ~~~~~~~~~~~~~~~~^~~~~~
-../Core/Src/main.c(188): error: member reference base type 'int' is not a structure or union
-                                          getOneBarrier(0).pos_1.x, getOneBarrier(0).pos_1.y, getOneBarrier(0).pos_2.x, getOneBarrier(0).pos_2.y);
-                                                                    ~~~~~~~~~~~~~~~~^~~~~~
-../Core/Src/main.c(188): error: member reference base type 'int' is not a structure or union
-                                          getOneBarrier(0).pos_1.x, getOneBarrier(0).pos_1.y, getOneBarrier(0).pos_2.x, getOneBarrier(0).pos_2.y);
-                                                                                              ~~~~~~~~~~~~~~~~^~~~~~
-../Core/Src/main.c(188): error: member reference base type 'int' is not a structure or union
-                                          getOneBarrier(0).pos_1.x, getOneBarrier(0).pos_1.y, getOneBarrier(0).pos_2.x, getOneBarrier(0).pos_2.y);
-                                                                                                                        ~~~~~~~~~~~~~~~~^~~~~~
-16 warnings and 14 errors generated.
+compiling gpio.c...
 compiling main.c...
 compiling stm32f4xx_it.c...
-compiling usart.c...
 compiling tim.c...
+compiling usart.c...
 compiling stm32f4xx_hal_msp.c...
-compiling stm32f4xx_hal_tim_ex.c...
-compiling stm32f4xx_hal_rcc_ex.c...
 compiling stm32f4xx_hal_flash_ramfunc.c...
-compiling stm32f4xx_hal_flash.c...
-compiling stm32f4xx_hal_tim.c...
+compiling stm32f4xx_hal_rcc_ex.c...
 compiling stm32f4xx_hal_flash_ex.c...
-compiling stm32f4xx_hal_gpio.c...
+compiling stm32f4xx_hal_flash.c...
 compiling stm32f4xx_hal_rcc.c...
+compiling stm32f4xx_hal_tim_ex.c...
+compiling stm32f4xx_hal_pwr_ex.c...
+compiling stm32f4xx_hal_gpio.c...
 compiling stm32f4xx_hal_pwr.c...
 compiling stm32f4xx_hal_dma_ex.c...
-compiling stm32f4xx_hal_pwr_ex.c...
-compiling stm32f4xx_hal_exti.c...
-compiling stm32f4xx_hal.c...
-compiling stm32f4xx_hal_cortex.c...
 compiling stm32f4xx_hal_dma.c...
+compiling stm32f4xx_hal_cortex.c...
 compiling system_stm32f4xx.c...
+compiling stm32f4xx_hal.c...
+compiling stm32f4xx_hal_exti.c...
+compiling stm32f4xx_hal_tim.c...
 compiling stm32f4xx_hal_uart.c...
-"test1\test1.axf" - 14 Error(s), 16 Warning(s).
+linking...
+Program Size: Code=27384 RO-data=616 RW-data=64 ZI-data=18328  
+FromELF: creating hex file...
+"test1\test1.axf" - 0 Error(s), 0 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -173,7 +85,6 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE:5.6.0
       Include file:  CMSIS/Core/Include/tz_context.h
-Target not created.
 Build Time Elapsed:  00:00:03
 </pre>
 </body>
