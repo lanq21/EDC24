@@ -3,13 +3,14 @@
 #include "map.h"
 #include "zigbee_edc24.h"
 #include "usart.h"
+#include "jy62.h"
 #include <math.h>
 
 float drive_velocity_goal;
 float drive_angle_goal;
 uint8_t drive_only_deliver;
 enum Drive_State_Type drive_state;
-Position_edc24 charge_pile[5] = {{80, 80}, {80, 160}, {160, 80}, {160, 160}, {120, 120}};
+Position_edc24 charge_pile[3] = {{80, 80}, {80, 160}, {160, 120}};
 
 // extern Position_edc24* node_list;
 // extern uint16_t node_list_size;
@@ -23,7 +24,7 @@ float Get_Distance(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 
 uint16_t Get_Nearby_Node(uint16_t x, uint16_t y)
 {
-    float min_distance = 1e5;
+    float min_distance = 1e30;
     uint16_t min_index;
     for (uint16_t index = 1; index <= node_cnt; index++)
     {
@@ -37,15 +38,6 @@ uint16_t Get_Nearby_Node(uint16_t x, uint16_t y)
     return min_index;
 }
 
-void Set_Angle_Goal()
-{
-
-    // if (zAnglePid.goal < -180.0f)
-    //     zAnglePid.goal = 180;
-    // if (zAnglePid.goal > 180.0f)
-    //     zAnglePid.goal = -180;
-}
-
 void Drive_Init()
 {
     drive_velocity_goal = 0;
@@ -53,6 +45,8 @@ void Drive_Init()
     drive_only_deliver = 0;
     drive_state = Ready;
 }
+
+extern struct vec acc, angle, vel;
 
 void Go_to(uint16_t x_goal, uint16_t y_goal)
 {
@@ -62,38 +56,45 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
     if (drive_state == Ready)
     {
         index = 0;
-        // Position_edc24 position = getVehiclePos();
-        Position_edc24 position;
-        position.x = 0;
-        position.y = 120;
+        Position_edc24 position = getVehiclePos();
         uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
         uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
+
         // u1_printf("%d,%d\n%d,%d\n", Node_List[begin_index].x, Node_List[begin_index].y, Node_List[end_index].x, Node_List[end_index].y);
+
         Dijkstra(begin_index, end_index);
+        index = stack_top - 1;
+
+        u1_printf("aaa%d,%d\n", position.x, position.y);
+        // HAL_Delay(100);
         for (int16_t i = stack_top - 1; i >= 0; --i)
         {
             u1_printf("%d,%d\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
         }
+
         drive_state = Going;
     }
     else if (drive_state == Going)
     {
-        if (index == 0)
+        if (index < 0)
             drive_state = Approaching;
         else
         {
             Position_edc24 position = getVehiclePos();
-            x_step_goal = Node_List[stack[stack_top - 1 - index]].x;
-            y_step_goal = Node_List[stack[stack_top - 1 - index]].y;
+            x_step_goal = Node_List[stack[index]].x;
+            y_step_goal = Node_List[stack[index]].y;
             float distance = Get_Distance(position.x, position.y, x_step_goal, y_step_goal);
             if (distance < Distance_Threshold__Next_Node)
-                --index;
+                index--;
             else
             {
-                drive_angle_goal = atan2(y_step_goal - position.y, x_step_goal - position.x) * 180 / 3.1415926 + 90;
-                // 可能要改正负号
-                if (drive_angle_goal > 180)
-                    drive_angle_goal -= 360;
+                drive_angle_goal = atan2((double)position.y - (double)y_step_goal, (double)x_step_goal - (double)position.x) * 180 / 3.1415926 - 90;
+
+                u1_printf("x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
+                // HAL_Delay(200);
+
+                if (drive_angle_goal < -180)
+                    drive_angle_goal += 180;
             }
         }
     }
@@ -105,17 +106,19 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
             drive_state = Ready;
         else
         {
-            drive_angle_goal = atan2(y_goal - position.y, x_goal - position.x) * 180 / 3.1415926 + 90;
-            // 可能要改正负号
-            if (drive_angle_goal > 180)
-                drive_angle_goal -= 360;
+            drive_angle_goal = atan2((double)position.y - (double)y_goal, (double)x_goal - (double)position.x) * 180 / 3.1415926 - 90;
+
+            u1_printf("x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
+            
+            if (drive_angle_goal < -180)
+                drive_angle_goal += 180;
         }
     }
 }
 
 void Set_Charge_Pile()
 {
-    for (uint8_t i = 0; i < 5; i++)
+    for (uint8_t i = 0; i < 3; i++)
     {
         Go_to(charge_pile[i].x, charge_pile[i].y);
         if (drive_state == Approaching)
@@ -152,7 +155,7 @@ void Drive()
         if (charging_pile_num && battery_life < RemainDistance_Threshold__Charge)
         {
             // charge
-            float min_distance = 1e8;
+            float min_distance = 1e30;
             uint8_t min_index;
             Position_edc24 vehicle = getVehiclePos();
             for (uint8_t i = 0; i < charging_pile_num; i++)

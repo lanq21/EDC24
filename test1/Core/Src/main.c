@@ -158,9 +158,9 @@ int main(void)
 	// speedPid[2].goal=10;
 	// speedPid[3].goal=10;
 
-	pid_init(&zAnglePid, 1.2f, 0.02f, 0.01f);
+	pid_init(&zAnglePid, 1.1f, 0.04f, 0.01f);
 	zAnglePid.goal = 0;
-	// u1_printf("hello");
+	u1_printf("hello");
 
 	zigbee_Init(&huart2);
 
@@ -170,6 +170,8 @@ int main(void)
 	/* USER CODE BEGIN WHILE */
 	uint32_t idx = 0;
 	uint8_t built = 0;
+	
+	Drive_Init();
 	while (1)
 	{
 		/* USER CODE END WHILE */
@@ -202,16 +204,16 @@ int main(void)
 			if (!built)
 			{
 				Barrier_edc24 b = getOneBarrier(0);
-				if (b.pos_1.x != 0 && b.pos_1.y != 0 && b.pos_2.x != 0 && b.pos_2.y != 0)
+				Position_edc24 tmppos=getVehiclePos();
+				if (b.pos_1.x != 0 && b.pos_1.y != 0 && b.pos_2.x != 0 && b.pos_2.y != 0 && tmppos.x!=0)
 				{
 					built = 1;
 					BuildMap();
+					// Set_Charge_Pile();
+
+					u1_printf("built:%d, %d", tmppos.x, tmppos.y);
+					HAL_Delay(1000);
 					
-					Set_Charge_Pile();
-					// 放充电桩，应该还有 Bug
-
-					// Position_edc24 tmppos=getVehiclePos();
-
 					// uint16_t curNode=Get_Nearby_Node(tmppos.x, tmppos.y);
 				}
 			}
@@ -222,11 +224,12 @@ int main(void)
 		if (built)
 		{
 			// Drive();
-			Go_to(0, 0);
-
-			// u1_printf("car:%d, %d\n", tmppos.x, tmppos.y);
-			// uint16_t curNode=Get_Nearby_Node(tmppos.x, tmppos.y);
+			Go_to(100, 100);
+			
+			
 		}
+		//Position_edc24 tmppos=getVehiclePos();
+		//u1_printf("x:%d, y:%d\n", tmppos.x, tmppos.y);
 	}
 	/* USER CODE END 3 */
 }
@@ -344,10 +347,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM7)
 	{
-		//float vy = drive_velocity_goal;
-		float vy=30;
-		// zAnglePid.goal = drive_angle_goal;
-		zAnglePid.goal = 0 ;
+		float vy = drive_velocity_goal;
+		//float vy=0;
+		zAnglePid.goal = drive_angle_goal;
+		//zAnglePid.goal = 0 ;
 		if (zAnglePid.goal < -180.0f)
 			zAnglePid.goal = 180;
 		if (zAnglePid.goal > 180.0f)
@@ -360,11 +363,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			zAngleErr += 360.0f;
 
 		double zAngleTht=pid_calculate(&zAnglePid,zAnglePid.goal+zAngleErr);
-		if (zAngleTht > 60)
-			zAngleTht = 60.0f;
-		if (zAngleTht < -60)
-			zAngleTht = -60.0f;
-
+		if (zAngleTht > 40)
+			zAngleTht = 40.0f;
+		if (zAngleTht < -40)
+			zAngleTht = -40.0f;
+		
+		//zAngleTht =0;
 		speedPid[2].goal = vy + zAngleTht;
 		speedPid[3].goal = vy + zAngleTht;
 		speedPid[0].goal = vy - zAngleTht;
