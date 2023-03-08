@@ -55,7 +55,6 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
     static uint16_t x_step_goal, y_step_goal;
     if (drive_state == Ready)
     {
-        index = 0;
         Position_edc24 position = getVehiclePos();
         uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
         uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
@@ -76,7 +75,7 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
     }
     else if (drive_state == Going)
     {
-        if (index < 0)
+        if (index == 0)
             drive_state = Approaching;
         else
         {
@@ -88,7 +87,7 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
                 index--;
             else
             {
-                drive_angle_goal = atan2((double)position.y - (double)y_step_goal, (double)x_step_goal - (double)position.x) * 180 / 3.1415926 - 90;
+                drive_angle_goal = atan2((double)position.x - (double)x_step_goal, (double)y_step_goal - (double)position.y) * 180 / 3.1415926 - 90;
 
                 u1_printf("x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
                 // HAL_Delay(200);
@@ -106,7 +105,7 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
             drive_state = Ready;
         else
         {
-            drive_angle_goal = atan2((double)position.y - (double)y_goal, (double)x_goal - (double)position.x) * 180 / 3.1415926 - 90;
+            drive_angle_goal = atan2((double)position.x - (double)x_goal, (double)y_goal - (double)position.y) * 180 / 3.1415926 - 90;
 
             u1_printf("x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
             

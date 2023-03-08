@@ -4,7 +4,7 @@
 #include "stm32f4xx_hal.h"
 #include "zigbee_edc24.h"
 
-#define Drive_Speed 20
+#define Drive_Speed 5
 #define Time_Weights_In_Cost 70
 #define Cost_Threshold__Get_New_Order 100
 #define Time_Threshold__Only_Deliver 200
@@ -22,13 +22,15 @@ extern enum Drive_State_Type drive_state;
 extern float drive_velocity_goal;
 extern float drive_angle_goal;
 extern uint8_t drive_only_deliver;
-extern Position_edc24 charge_pile[5];
+extern Position_edc24 charge_pile[3];
 
 float Get_Distance(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 
 uint16_t Get_Nearby_Node(uint16_t x, uint16_t y);
 
 void Go_to(uint16_t x_goal, uint16_t y_goal);
+
+void Set_Charge_Pile();
 
 void Drive_Init();
 

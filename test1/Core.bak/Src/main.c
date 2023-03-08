@@ -209,11 +209,9 @@ int main(void)
 				{
 					built = 1;
 					BuildMap();
-					// Set_Charge_Pile();
-
+					// 
 					u1_printf("built:%d, %d", tmppos.x, tmppos.y);
 					HAL_Delay(1000);
-					
 					// uint16_t curNode=Get_Nearby_Node(tmppos.x, tmppos.y);
 				}
 			}
@@ -223,7 +221,6 @@ int main(void)
 		}
 		if (built)
 		{
-			// Drive();
 			Go_to(100, 100);
 			
 			
