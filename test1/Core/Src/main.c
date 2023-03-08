@@ -320,7 +320,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim->Instance==TIM7){
 		//float curZAngle=angle.z;
 		//float vx=30*(float)sin((double)ag*3.1415926/180.0), vy=30*(float)cos((double)ag*3.1415926/180.0);
-		float vx=0.0f, vy=0.0f;
+		float vx=0.0f, vy=5;
 		ag+=1.0;
 		
 		/*
