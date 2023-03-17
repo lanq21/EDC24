@@ -43,7 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAX_SPEED 20
+#define MAX_SPEED 40
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -160,8 +160,8 @@ int main(void)
 	pid_init(&speedPid[2], 1.0f, 0.05f, 0.0f);
 	pid_init(&speedPid[3], 1.0f, 0.05f, 0.0f);
 
-	pid_init(&xPosPid, 1.0f, 0.01f, 0.05f);
-	pid_init(&yPosPid, 1.0f, 0.01f, 0.05f);
+	pid_init(&xPosPid, 1.4f, 0.012f, 0.1f);
+	pid_init(&yPosPid, 1.4f, 0.012f, 0.1f);
 	// speedPid[0].goal=10;
 	// speedPid[1].goal=10;
 	// speedPid[2].goal=10;
@@ -230,10 +230,13 @@ int main(void)
 		}
 		if (built)
 		{
-			Go_to(100,100);
-			//if(charge_pile_set==0)
-				//charge_pile_set=Set_Charge_Pile();
-			//Drive();
+			// if(charge_pile_set==0)
+			//	charge_pile_set=Set_Charge_Pile();
+			// else
+
+			Drive_Simple();
+
+			// Go_to(100,100);
 		}
 		// u1_printf("%d, %d, %d, %d\n", speed[0], speed[1], speed[2], speed[3]);
 		// Position_edc24 tmppos=getVehiclePos();
@@ -356,12 +359,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if (htim->Instance == TIM7)
 	{
 		Position_edc24 pos = getVehiclePos();
-
-		float vx = drive_velocity_x_goal;
-		float vy = -drive_velocity_y_goal;
-		//float vx = -pid_calculate(&xPosPid, pos.x);
-		//float vy = pid_calculate(&yPosPid, pos.y);
-
+		float vx = -pid_calculate(&xPosPid, pos.x);
+		float vy = pid_calculate(&yPosPid, pos.y);
+		if (deliver_state_simple == No_Order)
+		{
+			vx = 0;
+			vy = 0;
+		}
 		if (vx > MAX_SPEED)
 			vx = MAX_SPEED;
 		if (vx < -MAX_SPEED)

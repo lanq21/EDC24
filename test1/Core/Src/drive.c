@@ -19,6 +19,8 @@ Position_edc24 charge_pile[3] = {{80, 80}, {80, 160}, {160, 120}};
 Position_edc24 drive_goal;
 Drive_Order drive_order[70];
 uint8_t drive_order_total = 0;
+Order_edc24 order_simple;
+enum Deliver_State_Simple deliver_state_simple;
 
 // extern Position_edc24* node_list;
 // extern uint16_t node_list_size;
@@ -51,18 +53,24 @@ void Drive_Init()
     drive_velocity_x_goal = 0;
     drive_velocity_y_goal = 0;
     drive_angle_goal = 0;
-    drive_goal = getVehiclePos();
+    drive_goal.x = 0;
+    drive_goal.y = 0;
     drive_only_deliver = 0;
     drive_state = Ready;
+
+    // Simple
+    order_simple.orderId = -1;
+    // deliver_state_simple = No_Order;
 }
 
 extern struct vec acc, angle, vel;
-
+/*
 int16_t index = 0;
 uint8_t Drive_Plan(uint16_t x_goal, uint16_t y_goal)
 {
     if (drive_state == Ready)
     {
+
         Position_edc24 position = getVehiclePos();
         uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
         uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
@@ -73,7 +81,7 @@ uint8_t Drive_Plan(uint16_t x_goal, uint16_t y_goal)
         index = stack_top - 1;
 
         for (int16_t i = stack_top - 1; i >= 0; --i)
-            u1_printf("%d,%d\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
+            u1_printf("node:*%d,%d*\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
         return 1;
     }
     else
@@ -82,11 +90,14 @@ uint8_t Drive_Plan(uint16_t x_goal, uint16_t y_goal)
 
 void Go_to(uint16_t x_goal, uint16_t y_goal)
 {
-    if (x_goal != drive_goal.x || y_goal != drive_goal.y)
+    HAL_Delay(100);
+    if (1)
     {
-        Drive_Plan(x_goal, y_goal);
-        drive_goal.x = x_goal;
-        drive_goal.y = y_goal;
+            u1_printf("goal:%d %d %d %d*\n",drive_goal.x, drive_goal.y, x_goal, y_goal);
+            HAL_Delay(100);
+      Drive_Plan(x_goal, y_goal);
+      drive_goal.x = x_goal;
+      drive_goal.y = y_goal;
     }
     // drive_velocity_goal = Drive_Speed;
     uint16_t x_step_goal, y_step_goal;
@@ -95,11 +106,17 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
         // u1_printf("aaa%d,%d\n", position.x, position.y);
         // HAL_Delay(100);
         drive_state = Going;
+        xPosPid.iErr = 0;
+        yPosPid.iErr = 0;
     }
     else if (drive_state == Going)
     {
-        if (index < 0)
+        if (index == 0)
+        {
             drive_state = Approaching;
+            xPosPid.iErr = 0;
+            yPosPid.iErr = 0;
+        }
         else
         {
             Position_edc24 position = getVehiclePos();
@@ -107,12 +124,16 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
             y_step_goal = Node_List[stack[index]].y;
             float distance = Get_Distance(position.x, position.y, x_step_goal, y_step_goal);
             if (distance < Distance_Threshold__Next_Node)
+            {
+                xPosPid.iErr = 0;
+                yPosPid.iErr = 0;
                 index--;
+            }
             else
             {
-                // drive_angle_goal = atan2((double)position.x - (double)x_step_goal, (double)y_step_goal - (double)position.y) * 180 / 3.1415926 - 90;
-                // drive_velocity_x_goal = Drive_Speed * (float)(x_step_goal - position.x) / distance;
-                // drive_velocity_y_goal = Drive_Speed * (float)(y_step_goal - position.y) / distance;
+                drive_angle_goal = atan2((double)position.x - (double)x_step_goal, (double)y_step_goal - (double)position.y) * 180 / 3.1415926 - 90;
+                drive_velocity_x_goal = Drive_Speed * (float)(x_step_goal - position.x) / distance;
+                drive_velocity_y_goal = Drive_Speed * (float)(position.y - y_step_goal) / distance;
                 xPosPid.goal = x_step_goal;
                 yPosPid.goal = y_step_goal;
                 u1_printf("Going:x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
@@ -129,30 +150,114 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
             drive_state = Ready;
         else
         {
-            // drive_angle_goal = atan2((double)position.x - (double)x_goal, (double)y_goal - (double)position.y) * 180 / 3.1415926 - 90;
-            // drive_velocity_x_goal = Drive_Speed * (float)(x_goal - position.x) / distance;
-            // drive_velocity_y_goal = Drive_Speed * (float)(y_goal - position.y) / distance;
+            drive_angle_goal = atan2((double)position.x - (double)x_goal, (double)y_goal - (double)position.y) * 180 / 3.1415926 - 90;
+            drive_velocity_x_goal = Drive_Speed * (float)(x_goal - position.x) / distance;
+            drive_velocity_y_goal = Drive_Speed * (float)(position.y - y_goal) / distance;
             xPosPid.goal = x_goal;
             yPosPid.goal = y_goal;
-            u1_printf("Approaching:x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
+            u1_printf("Approaching:x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_goal, y_goal, angle.z, drive_angle_goal);
             // if (drive_angle_goal < -180)
             //    drive_angle_goal += 180;
         }
     }
 }
+*/
 
+void Go_to(uint16_t x_goal, uint16_t y_goal)
+{
+    // drive_velocity_goal = Drive_Speed;
+    static int16_t index;
+    static uint16_t x_step_goal, y_step_goal;
+    if (drive_state == Ready)
+    {
+        Position_edc24 position = getVehiclePos();
+        uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
+        uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
+
+        // u1_printf("%d,%d\n%d,%d\n", Node_List[begin_index].x, Node_List[begin_index].y, Node_List[end_index].x, Node_List[end_index].y);
+
+        Dijkstra(begin_index, end_index);
+        index = stack_top - 1;
+
+        u1_printf("aaa%d,%d\n", position.x, position.y);
+        // HAL_Delay(100);
+        for (int16_t i = stack_top - 1; i >= 0; --i)
+        {
+            u1_printf("%d,%d\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
+        }
+
+        drive_state = Going;
+        xPosPid.iErr = yPosPid.iErr = 0;
+    }
+    else if (drive_state == Going)
+    {
+        if (index < 0)
+        {
+            drive_state = Approaching;
+            xPosPid.iErr = yPosPid.iErr = 0;
+        }
+        else
+        {
+            Position_edc24 position = getVehiclePos();
+            x_step_goal = Node_List[stack[index]].x;
+            y_step_goal = Node_List[stack[index]].y;
+            float distance = Get_Distance(position.x, position.y, x_step_goal, y_step_goal);
+            if (distance < Distance_Threshold__Next_Node)
+            {
+                index--;
+                xPosPid.iErr = yPosPid.iErr = 0;
+            }
+            else
+            {
+                drive_angle_goal = atan2((double)position.x - (double)x_step_goal, (double)y_step_goal - (double)position.y) * 180 / 3.1415926 - 90;
+
+                drive_velocity_x_goal = Drive_Speed * (float)(x_step_goal - position.x) / distance;
+                drive_velocity_y_goal = Drive_Speed * (float)(y_step_goal - position.y) / distance;
+
+                xPosPid.goal = x_step_goal;
+                yPosPid.goal = y_step_goal;
+                u1_printf("x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
+                // HAL_Delay(200);
+
+                if (drive_angle_goal < -180)
+                    drive_angle_goal += 180;
+            }
+        }
+    }
+    else if (drive_state == Approaching)
+    {
+        Position_edc24 position = getVehiclePos();
+        float distance = Get_Distance(position.x, position.y, x_goal, y_goal);
+        if (distance < Distance_Threshold__Next_Node_For_Approaching)
+            drive_state = Ready;
+        else
+        {
+            drive_angle_goal = atan2((double)position.x - (double)x_goal, (double)y_goal - (double)position.y) * 180 / 3.1415926 - 90;
+            drive_velocity_x_goal = Drive_Speed * (float)(x_goal - position.x) / distance;
+            drive_velocity_y_goal = Drive_Speed * (float)(y_goal - position.y) / distance;
+
+            xPosPid.goal = x_goal;
+            yPosPid.goal = y_goal;
+            u1_printf("x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
+
+            if (drive_angle_goal < -180)
+                drive_angle_goal += 180;
+        }
+    }
+}
+
+uint8_t charge_pile_index = 0;
 uint8_t Set_Charge_Pile()
 {
-    static uint8_t i = 0;
-    Go_to(charge_pile[i].x, charge_pile[i].y);
+    Go_to(charge_pile[charge_pile_index].x, charge_pile[charge_pile_index].y);
     if (drive_state == Approaching)
     {
         setChargingPile();
-        charge_pile[i] = getVehiclePos();
+        charge_pile[charge_pile_index] = getVehiclePos();
         drive_state = Ready;
-        i++;
+        charge_pile_index++;
     }
-    return i == 3;
+    return charge_pile_index == 3;
 }
 
 void Drive_Receive_New_Order()
@@ -239,6 +344,50 @@ uint8_t Drive_Order_To_Deliver(uint32_t *min_cost, Order_edc24 *order)
     {
         order = NULL;
         return 0;
+    }
+}
+
+int16_t drive_simple_lastOrderID = -1;
+Order_edc24 drive_simple_order_ready;
+void Drive_Simple()
+{
+    switch (deliver_state_simple)
+    {
+    case No_Order:
+        if (order_simple.depPos.x)
+            deliver_state_simple = To_Dep;
+        else
+        {
+            if (getOrderNum() > 0)
+            {
+                drive_simple_order_ready = getOneOrder(0);
+                if (drive_simple_order_ready.orderId != drive_simple_lastOrderID)
+                {
+                    order_simple = drive_simple_order_ready;
+                    deliver_state_simple = Dep_to_Des;
+                }
+            }
+            else
+                order_simple = getLatestPendingOrder();
+            if (order_simple.orderId == drive_simple_lastOrderID)
+                order_simple.depPos.x = 0;
+            else
+                drive_simple_lastOrderID = order_simple.orderId;
+        }
+        break;
+    case To_Dep:
+        Go_to(order_simple.depPos.x, order_simple.depPos.y);
+        if (drive_state == Ready)
+            deliver_state_simple = Dep_to_Des;
+        break;
+    case Dep_to_Des:
+        Go_to(order_simple.desPos.x, order_simple.desPos.y);
+        if (drive_state == Ready)
+        {
+            deliver_state_simple = No_Order;
+            order_simple.depPos.x = 0;
+        }
+        break;
     }
 }
 

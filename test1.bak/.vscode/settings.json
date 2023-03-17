@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "jy62.h": "c",
-        "math.h": "c",
-        "cstdint": "c",
-        "type_traits": "c",
-        "xutility": "c"
-    }
-}
