@@ -1,38 +1,38 @@
 #include "drive.h"
-#include "Dijkstra.h"
-#include "map.h"
-#include "zigbee_edc24.h"
+
+#include <math.h>
 #include "usart.h"
 #include "jy62.h"
-#include <math.h>
+#include "zigbee_edc24.h"
 #include "pid.h"
+#include "map.h"
+#include "Dijkstra.h"
 
-extern pid xPosPid, yPosPid;
-extern pid zAnglePid;
+// Go to 方案1, 有位置 pid 和角度 pid
+extern pid xPosPid, yPosPid, zAnglePid;
 
+// Go to 方案2, 无位置 pid
 float drive_velocity_x_goal;
 float drive_velocity_y_goal;
 float drive_angle_goal;
-uint8_t drive_only_deliver;
-enum Drive_State_Type drive_state;
-Position_edc24 charge_pile[3] = {{80, 80}, {80, 160}, {160, 120}};
-Position_edc24 drive_goal;
-Drive_Order drive_order[70];
-uint8_t drive_order_total = 0;
-Order_edc24 order_simple;
-enum Deliver_State_Simple deliver_state_simple;
 
-// extern Position_edc24* node_list;
-// extern uint16_t node_list_size;
-extern Position_edc24 Node_List[num * num];
-extern uint16_t node_cnt;
+uint8_t drive_only_deliver;                                        // 标记：时间不足时只送货
+enum Drive_State_Type drive_state;                                 // 状态：就绪；前往下一个中间点；靠近目标点
+Position_edc24 charge_pile[3] = {{80, 80}, {80, 160}, {160, 120}}; // 充电桩位置，在最近的建图节点设置充电桩后更新
+Position_edc24 drive_goal;                                         // 目标点
 
-float Get_Distance(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
+Drive_Order drive_order[70];   // 订单列表
+uint8_t drive_order_total = 0; // 订单列表索引范围
+
+extern Position_edc24 Node_List[num * num]; // "map.h" 节点列表
+extern uint16_t node_cnt;                   // "map.h" 节点数
+
+float Get_Distance(int16_t x1, int16_t y1, int16_t x2, int16_t y2) // 计算两点间欧氏距离
 {
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
-uint16_t Get_Nearby_Node(uint16_t x, uint16_t y)
+uint16_t Get_Nearby_Node(uint16_t x, uint16_t y) // 获取最近的节点在 NodeList 的索引
 {
     float min_distance = 1e30;
     uint16_t min_index;
@@ -48,70 +48,57 @@ uint16_t Get_Nearby_Node(uint16_t x, uint16_t y)
     return min_index;
 }
 
-void Drive_Init()
+void Drive_Init() // 初始化
 {
-    drive_velocity_x_goal = 0;
-    drive_velocity_y_goal = 0;
-    drive_angle_goal = 0;
+    // drive_velocity_x_goal = 0;
+    // drive_velocity_y_goal = 0;
+    // drive_angle_goal = 0;
+
     drive_goal.x = 0;
     drive_goal.y = 0;
     drive_only_deliver = 0;
     drive_state = Ready;
 
-    // Simple
+    // （简单逻辑）初始化
+    order_simple.depPos.x = 0;
     order_simple.orderId = -1;
-    // deliver_state_simple = No_Order;
+    deliver_state_simple = No_Order;
 }
 
-extern struct vec acc, angle, vel;
-/*
-int16_t index = 0;
-uint8_t Drive_Plan(uint16_t x_goal, uint16_t y_goal)
+void Drive_Plan(uint16_t x_goal, uint16_t y_goal) // 进行一次路径规划
 {
-    if (drive_state == Ready)
+    Position_edc24 position = getVehiclePos();
+    uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
+    uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
+    Dijkstra(begin_index, end_index);
+    // for (int16_t i = stack_top - 1; i >= 0; --i)
+    //     u1_printf("node:*%d,%d*\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
+}
+
+uint16_t index = 0;                          // 当前路径点在 stack 中的索引
+uint16_t drive_goal_x = 0, drive_goal_y = 0; // 目标点
+extern struct vec acc, angle, vel;           // "jy62.h" 加速度、角度、速度，用于串口监测
+void Go_to(uint16_t x_goal, uint16_t y_goal) // 前往目标点
+{
+    if ((drive_goal_x != x_goal) || (drive_goal_y != y_goal))
     {
-
-        Position_edc24 position = getVehiclePos();
-        uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
-        uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
-
-        // u1_printf("%d,%d\n%d,%d\n", Node_List[begin_index].x, Node_List[begin_index].y, Node_List[end_index].x, Node_List[end_index].y);
-
-        Dijkstra(begin_index, end_index);
+        Drive_Plan(x_goal, y_goal); // 进行一次路径规划
+        drive_goal_x = x_goal;      // 更新目标点
+        drive_goal_y = y_goal;
+        drive_state = Ready; // 暂停上一任务，重置状态
         index = stack_top - 1;
-
-        for (int16_t i = stack_top - 1; i >= 0; --i)
-            u1_printf("node:*%d,%d*\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
-        return 1;
     }
-    else
-        return 0;
-}
-
-void Go_to(uint16_t x_goal, uint16_t y_goal)
-{
-    HAL_Delay(100);
-    if (1)
-    {
-            u1_printf("goal:%d %d %d %d*\n",drive_goal.x, drive_goal.y, x_goal, y_goal);
-            HAL_Delay(100);
-      Drive_Plan(x_goal, y_goal);
-      drive_goal.x = x_goal;
-      drive_goal.y = y_goal;
-    }
-    // drive_velocity_goal = Drive_Speed;
     uint16_t x_step_goal, y_step_goal;
+
     if (drive_state == Ready)
     {
-        // u1_printf("aaa%d,%d\n", position.x, position.y);
-        // HAL_Delay(100);
         drive_state = Going;
         xPosPid.iErr = 0;
         yPosPid.iErr = 0;
     }
     else if (drive_state == Going)
     {
-        if (index == 0)
+        if (index == 0) // 已到达最后一个路径点
         {
             drive_state = Approaching;
             xPosPid.iErr = 0;
@@ -123,22 +110,23 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
             x_step_goal = Node_List[stack[index]].x;
             y_step_goal = Node_List[stack[index]].y;
             float distance = Get_Distance(position.x, position.y, x_step_goal, y_step_goal);
-            if (distance < Distance_Threshold__Next_Node)
+            if (distance < Distance_Threshold__Next_Node) // 目标切换到下一个路径点
             {
                 xPosPid.iErr = 0;
                 yPosPid.iErr = 0;
                 index--;
             }
-            else
+            else // 继续靠近路径点
             {
-                drive_angle_goal = atan2((double)position.x - (double)x_step_goal, (double)y_step_goal - (double)position.y) * 180 / 3.1415926 - 90;
-                drive_velocity_x_goal = Drive_Speed * (float)(x_step_goal - position.x) / distance;
-                drive_velocity_y_goal = Drive_Speed * (float)(position.y - y_step_goal) / distance;
+                // drive_angle_goal = atan2((double)position.x - (double)x_step_goal, (double)y_step_goal - (double)position.y) * 180 / 3.1415926 - 90;
+                // if (drive_angle_goal < -180) drive_angle_goal += 180;
+                // drive_velocity_x_goal = Drive_Speed * (float)(x_step_goal - position.x) / distance;
+                // drive_velocity_y_goal = Drive_Speed * (float)(position.y - y_step_goal) / distance;
+
                 xPosPid.goal = x_step_goal;
                 yPosPid.goal = y_step_goal;
+
                 u1_printf("Going:x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
-                // if (drive_angle_goal < -180)
-                //     drive_angle_goal += 180;
             }
         }
     }
@@ -146,23 +134,25 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
     {
         Position_edc24 position = getVehiclePos();
         float distance = Get_Distance(position.x, position.y, x_goal, y_goal);
-        if (distance < Distance_Threshold__Next_Node_For_Approaching)
+        if (distance < Distance_Threshold__Next_Node_For_Approaching) // 判定为到达
             drive_state = Ready;
-        else
+        else // 继续靠近目标点
         {
-            drive_angle_goal = atan2((double)position.x - (double)x_goal, (double)y_goal - (double)position.y) * 180 / 3.1415926 - 90;
-            drive_velocity_x_goal = Drive_Speed * (float)(x_goal - position.x) / distance;
-            drive_velocity_y_goal = Drive_Speed * (float)(position.y - y_goal) / distance;
+            // drive_angle_goal = atan2((double)position.x - (double)x_goal, (double)y_goal - (double)position.y) * 180 / 3.1415926 - 90;
+            // if (drive_angle_goal < -180) drive_angle_goal += 180;
+            // drive_velocity_x_goal = Drive_Speed * (float)(x_goal - position.x) / distance;
+            // drive_velocity_y_goal = Drive_Speed * (float)(position.y - y_goal) / distance;
+
             xPosPid.goal = x_goal;
             yPosPid.goal = y_goal;
+
             u1_printf("Approaching:x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_goal, y_goal, angle.z, drive_angle_goal);
-            // if (drive_angle_goal < -180)
-            //    drive_angle_goal += 180;
         }
     }
 }
-*/
 
+// 每次调用都会进行一次路径规划的 Go_to()
+/*
 void Go_to(uint16_t x_goal, uint16_t y_goal)
 {
     // drive_velocity_goal = Drive_Speed;
@@ -245,134 +235,198 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
         }
     }
 }
+*/
 
-uint8_t charge_pile_index = 0;
-uint8_t Set_Charge_Pile()
+uint8_t charge_pile_index = 0; // 取 0 1 2，超出时直接返回
+void Drive_Set_Charge_Pile()   // 循环调用以设置 3 个充电桩
 {
-    Go_to(charge_pile[charge_pile_index].x, charge_pile[charge_pile_index].y);
-    if (drive_state == Approaching)
+    if (charge_pile_index < 3)
     {
-        setChargingPile();
-        charge_pile[charge_pile_index] = getVehiclePos();
-        drive_state = Ready;
-        charge_pile_index++;
-    }
-    return charge_pile_index == 3;
-}
-
-void Drive_Receive_New_Order()
-{
-    Order_edc24 new_order = getLatestPendingOrder();
-    if (new_order.depPos.x)
-    {
-        drive_order[drive_order_total].order = new_order;
-        drive_order[drive_order_total].state = To_Deliver;
-        drive_order[drive_order_total].time = getGameTime();
-        drive_order_total++;
-    }
-}
-
-uint8_t Drive_Change_Order_State_Order_Num = 0;
-void Drive_Change_Order_State()
-{
-    uint16_t id;
-    if (Drive_Change_Order_State_Order_Num < getOrderNum())
-        id = getOneOrder(getOrderNum() - 1).orderId;
-    Drive_Change_Order_State_Order_Num = getOrderNum();
-    for (uint8_t i = 0; i < drive_order_total; i++)
-    {
-        // if (drive_order[i].state == Delivering)
-        // {
-        //     uint8_t flag = 0;
-        //     for (int j = 0; j < order_num; j++)
-        //     {
-        //         if (GetOneOrder(j).orderID == id)
-        //         {
-        //             flag = 1;
-        //             break;
-        //         }
-        //     }
-        //     if (flag == 0)
-        //         drive_order[i].state = Delivered;
-        // }
-        if (drive_order[i].order.orderId == id)
+        Go_to(charge_pile[charge_pile_index].x, charge_pile[charge_pile_index].y);
+        if (drive_state == Approaching)
         {
-            drive_order[i].state = Delivering;
-            break;
+            setChargingPile();
+            charge_pile[charge_pile_index] = getOneOwnPile(charge_pile_index);
+            drive_state = Ready;
+            charge_pile_index++;
         }
     }
 }
 
-uint8_t Drive_First_New_Order(Order_edc24 *order)
+void Drive_Receive_New_Order() // 将新订单加入 drive_order 数组
 {
-    uint8_t i = 0;
-    for (; i < drive_order_total; i++)
+    Order_edc24 order = getLatestPendingOrder();
+    if (order.depPos.x)
     {
-        if (drive_order[i].state == To_Deliver)
+        if (drive_order_total == 0)
         {
-            *order = drive_order[i].order;
-            return 1;
+            drive_order[drive_order_total].order = order;
+            drive_order[drive_order_total].state = To_Deliver;
+            drive_order_total++;
+        }
+        else if (order.orderId != drive_order[drive_order_total - 1].order.orderId)
+        {
+            drive_order[drive_order_total].order = order;
+            drive_order[drive_order_total].state = To_Deliver;
+            drive_order_total++;
         }
     }
-    order = NULL;
-    return 0;
 }
 
-uint8_t Drive_Order_To_Deliver(uint32_t *min_cost, Order_edc24 *order)
+uint8_t drive_update_order_state_order_num = 0; // 上一次更新订单状态时的携带订单数
+int16_t delivering_order_id[5];                 // 正在运送的订单 id
+void Drive_Update_Order_State()                 // 更新订单状态
 {
-    Position_edc24 vehicle = getVehiclePos();
-    uint8_t order_num = getOrderNum();
-    if (order_num)
+    // 携带订单数 +1 ：To_Deliver -> Delivering
+    // 携带订单数 -1 ：Delivering -> Delivered
+    // 超时未送达：Delivering -> Delivered
+
+    uint8_t order_delivering_num = getOrderNum(); // 正在运送的订单数
+    for (int i = 0; i < order_delivering_num; i++)
+        delivering_order_id[i] = getOneOrder(i).orderId;
+
+    if (order_delivering_num > drive_update_order_state_order_num) // 携带订单数 +1
     {
-        *min_cost = UINT_LEAST32_MAX;
-        uint8_t order_index;
-        for (int i = 0; i < order_num; i++)
+        for (int i = drive_order_total - 1; i >= 0; i--)
         {
-            Order_edc24 order = getOneOrder(i);
-            uint32_t cost = order.timeLimit * Time_Weights_In_Cost +
-                            (uint32_t)Get_Distance(vehicle.x, vehicle.y, order.desPos.x, order.desPos.y) * (100 - Time_Weights_In_Cost) * 200;
-            if (cost < *min_cost)
+            if (drive_order[i].order.orderId == delivering_order_id[order_delivering_num])
             {
-                *min_cost = cost;
-                order_index = i;
+                drive_order[i].state = Delivering;
+                drive_order[i].receive_time = getGameTime();
+                break;
             }
         }
-        *order = getOneOrder(order_index);
-        return 1;
     }
-    else
+    else if (order_delivering_num < drive_update_order_state_order_num) // 携带订单数 -1
     {
-        order = NULL;
-        return 0;
+        for (int i = drive_order_total - 1; i >= 0; i--)
+        {
+            if (drive_order[i].state == Delivering)
+            {
+                int j = 0;
+                int16_t old_id = drive_order[i].order.orderId;
+                for (; j < order_delivering_num; j++)
+                {
+                    if (old_id == delivering_order_id[j])
+                        break;
+                }
+                if (j == order_delivering_num)
+                {
+                    drive_order[i].state = Delivered;
+                    break;
+                }
+            }
+        }
     }
+    for (int i = 0; i < drive_order_total; i++)
+    {
+        if (drive_order[i].state == Delivering)
+        {
+            if (getGameTime() - drive_order[i].receive_time > drive_order[i].order.timeLimit + Time_Threshold__Abandon_Order) // 超时未送达
+                drive_order[i].state = Delivered;
+        }
+    }
+    drive_update_order_state_order_num = order_delivering_num;
 }
 
-int16_t drive_simple_lastOrderID = -1;
-Order_edc24 drive_simple_order_ready;
-void Drive_Simple()
+void Drive_Charge() // 充电
 {
+    uint8_t charging_pile_num = getOwnChargingPileNum();
+    float min_distance = 1e30;
+    uint8_t min_index;
+    Position_edc24 vehicle = getVehiclePos();
+    for (uint8_t i = 0; i < charging_pile_num; i++)
+    {
+        Position_edc24 pile = getOneOwnPile(i);
+        float distance = Get_Distance(pile.x, pile.y, vehicle.x, vehicle.y);
+        if (distance < min_distance)
+        {
+            min_distance = distance;
+            min_index = i;
+        }
+    }
+    Position_edc24 pile = getOneOwnPile(min_index);
+    Go_to(pile.x, pile.y);
+}
+
+int32_t Drive_Value(Drive_Order drive_order) // 计算订单价值
+{
+    int32_t value;
+    if (drive_order.state == To_Deliver)
+        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit);
+    else if (drive_order.state == Delivering)
+        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit - getGameTime() + drive_order.receive_time);
+    else if (drive_order.state == Delivered)
+        value = -Value_Threshold__Change;
+    return value;
+}
+
+int32_t max_value = -Value_Threshold__Change; // 最大价值
+uint8_t max_index = 0;                        // 最大价值订单索引
+void Drive_Deliver_Order()                    // 接单或送单
+{
+    if (drive_order[max_index].state == Delivered) // 最大价值订单已送达
+        max_value = -Value_Threshold__Change;
+
+    for (int i = 0; i < drive_order_total; i++)
+    {
+        int32_t value = Drive_Value(drive_order[i]);
+        if (value > max_value + Value_Threshold__Change)
+        {
+            max_value = value;
+            max_index = i;
+        }
+    }
+
+    if (max_value > 0) // 有订单可执行
+    {
+        if (drive_order[max_index].state == To_Deliver)
+        {
+            Go_to(drive_order[max_index].order.depPos.x, drive_order[max_index].order.depPos.y);
+            deliver_state_simple = To_Dep;
+        }
+        else if (drive_order[max_index].state == Delivering)
+        {
+            Go_to(drive_order[max_index].order.desPos.x, drive_order[max_index].order.desPos.y);
+            deliver_state_simple = Dep_to_Des;
+        }
+    }
+    else
+        deliver_state_simple = No_Order;
+}
+
+int16_t drive_simple_lastOrderID = -1;          // （简单逻辑）上一次订单 id
+Order_edc24 drive_simple_order_ready;           // （简单逻辑）准备好的订单
+Order_edc24 order_simple;                       // （简单逻辑）当前订单
+enum Deliver_State_Simple deliver_state_simple; // （简单逻辑）当前订单状态
+void Drive_Simple()                             // 简单逻辑
+{
+    setChargingPile();
     switch (deliver_state_simple)
     {
     case No_Order:
-        if (order_simple.depPos.x)
+        if (order_simple.depPos.x) // 有新订单
             deliver_state_simple = To_Dep;
         else
         {
             if (getOrderNum() > 0)
             {
                 drive_simple_order_ready = getOneOrder(0);
-                if (drive_simple_order_ready.orderId != drive_simple_lastOrderID)
+                if (drive_simple_order_ready.orderId != drive_simple_lastOrderID) // 携带的第一个订单是新订单
                 {
                     order_simple = drive_simple_order_ready;
-                    deliver_state_simple = Dep_to_Des;
+                    deliver_state_simple = Dep_to_Des; // 直接转到递送阶段
                 }
             }
             else
-                order_simple = getLatestPendingOrder();
-            if (order_simple.orderId == drive_simple_lastOrderID)
+                order_simple = getLatestPendingOrder(); // 没有订单，获取最新的订单
+            if (order_simple.orderId == drive_simple_lastOrderID || order_simple.depPos.x < 10 || order_simple.depPos.x > 254 - 10 || order_simple.desPos.x < 10 || order_simple.desPos.x > 254 - 10)
+            { // 无新订单或者订单不合法
                 order_simple.depPos.x = 0;
+                deliver_state_simple = No_Order;
+            }
             else
-                drive_simple_lastOrderID = order_simple.orderId;
+                drive_simple_lastOrderID = order_simple.orderId; // 更新上一次订单 id
         }
         break;
     case To_Dep:
@@ -391,81 +445,30 @@ void Drive_Simple()
     }
 }
 
-void Drive()
+void Drive() // 主逻辑
 {
     if (getGameStatus() == GameStandby)
         return;
     switch (getGameStage())
     {
     case FirstHalf:
-        if (getGameTime() + Time_Threshold__Only_Deliver < getHalfGameDuration())
+        if (getGameTime() + Time_Threshold__Only_Deliver < 60000)
             drive_only_deliver = 1;
+        Drive_Set_Charge_Pile();
         break;
     case SecondHalf:
-        if (getGameTime() + Time_Threshold__Only_Deliver < getHalfGameDuration() + 60000)
+        if (getGameTime() + Time_Threshold__Only_Deliver < 180000 + 60000)
             drive_only_deliver = 1;
         break;
     default:
         return;
     }
-    Drive_Receive_New_Order();
-    Drive_Change_Order_State();
 
-    uint16_t x_goal = 0, y_goal = 0;
-    if (drive_state == Ready)
-    {
-        uint32_t battery_life = getRemainDist();
-        uint8_t charging_pile_num = getOwnChargingPileNum();
-        if (charging_pile_num && battery_life < RemainDistance_Threshold__Charge)
-        {
-            // charge
-            float min_distance = 1e30;
-            uint8_t min_index;
-            Position_edc24 vehicle = getVehiclePos();
-            for (uint8_t i = 0; i < charging_pile_num; i++)
-            {
-                Position_edc24 pile = getOneOwnPile(i);
-                float distance = Get_Distance(pile.x, pile.y, vehicle.x, vehicle.y);
-                if (distance < min_distance)
-                {
-                    min_distance = distance;
-                    min_index = i;
-                }
-            }
-            Position_edc24 pile = getOneOwnPile(min_index);
-            x_goal = pile.x;
-            y_goal = pile.y;
-        }
-        else
-        {
-            // deliver an order or get new order
-            uint32_t min_cost;
-            Order_edc24 order_to_deliver, new_order;
-            if (Drive_Order_To_Deliver(&min_cost, &order_to_deliver))
-            {
-                x_goal = order_to_deliver.desPos.x;
-                y_goal = order_to_deliver.desPos.y;
-                // if (drive_only_deliver == 0 &&
-                //     getOrderNum() < 5 &&
-                //     min_cost > Cost_Threshold__Get_New_Order &&
-                //     Drive_First_New_Order(&new_order))
-                // {
-                //     x_goal = new_order.depPos.x;
-                //     y_goal = new_order.depPos.y;
-                // }
-                // else
-                // {
-                //     x_goal = order_to_deliver.desPos.x;
-                //     y_goal = order_to_deliver.desPos.y;
-                // }
-            }
-            else if (Drive_First_New_Order(&new_order))
-            {
-                x_goal = new_order.depPos.x;
-                y_goal = new_order.depPos.y;
-            }
-        }
-    }
-    if (x_goal && y_goal)
-        Go_to(x_goal, y_goal);
+    Drive_Receive_New_Order();
+    Drive_Update_Order_State();
+
+    if (getOwnChargingPileNum() && getRemainDist() < RemainDistance_Threshold__Charge)
+        Drive_Charge();
+    else
+        Drive_Deliver_Order();
 }
