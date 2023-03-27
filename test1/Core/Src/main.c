@@ -43,7 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAX_SPEED 10
+#define MAX_SPEED 20
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/

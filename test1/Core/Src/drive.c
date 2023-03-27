@@ -32,13 +32,6 @@ float Get_Distance(int16_t x1, int16_t y1, int16_t x2, int16_t y2) // 计算两�
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
-uint16_t Get_Manhattan_Distance(Position_edc24 p1, Position_edc24 p2) // 计算两点间曼哈顿距离
-{
-    uint16_t d1 = (p1.x - p2.x) > 0 ? (p1.x - p2.x) : (p2.x - p1.x);
-    uint16_t d2 = (p1.y - p2.y) > 0 ? (p1.y - p2.y) : (p2.y - p1.y);
-    return (d1 + d2) > 0 ? (d1 + d2) : 1;
-}
-
 uint16_t Get_Nearby_Node(uint16_t x, uint16_t y) // 获取最近的节点在 NodeList 的索引
 {
     float min_distance = 1e30;
@@ -80,6 +73,7 @@ void Drive_Plan(uint16_t x_goal, uint16_t y_goal) // 进行一次路径规划
     uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
     uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
     Dijkstra(begin_index, end_index);
+    u1_printf("drive_plan called, go to(%d,%d)\n", x_goal, y_goal);
     // for (int16_t i = stack_top - 1; i >= 0; --i)
     //     u1_printf("node:*%d,%d*\n", Node_List[stack[i]].x, Node_List[stack[i]].y);
 }
@@ -144,7 +138,9 @@ void Go_to(uint16_t x_goal, uint16_t y_goal) // 前往目标点
         Position_edc24 position = getVehiclePos();
         float distance = Get_Distance(position.x, position.y, x_goal, y_goal);
         if (distance < Distance_Threshold__Next_Node_For_Approaching) // 判定为到达
-            drive_state = Ready;
+        {    drive_state = Ready;
+            u1_printf("Arrived\n");
+        }
         else // 继续靠近目标点
         {
             // drive_angle_goal = atan2((double)position.x - (double)x_goal, (double)y_goal - (double)position.y) * 180 / 3.1415926 - 90;
@@ -249,18 +245,25 @@ void Go_to(uint16_t x_goal, uint16_t y_goal)
 uint8_t charge_pile_index = 0; // 取 0 1 2，超出时直接返回
 void Drive_Set_Charge_Pile()   // 循环调用以设置 3 个充电桩
 {
-    if (charge_pile_index < 3)
+    // if (charge_pile_index < 3)
+    // {
+    //     deliver_state_simple = To_Dep;
+    //     Go_to(charge_pile[charge_pile_index].x, charge_pile[charge_pile_index].y);
+    //     if (drive_state == Approaching)
+    //     {
+    //         setChargingPile();
+    //         u1_printf("set charge pile No.%d\n", charge_pile_index);
+    //         charge_pile[charge_pile_index] = getOneOwnPile(charge_pile_index);
+    //         drive_state = Ready;
+    //         deliver_state_simple = No_Order;
+    //         charge_pile_index++;
+    //     }
+    // }
+    if(charge_pile_index<3 && getGameTime()%500==0)
     {
-        deliver_state_simple = To_Dep;
-        Go_to(charge_pile[charge_pile_index].x, charge_pile[charge_pile_index].y);
-        if (drive_state == Approaching)
-        {
-            u1_printf("set charge pile %d\n", charge_pile_index);
-            setChargingPile();
-            charge_pile[charge_pile_index] = getOneOwnPile(charge_pile_index);
-            drive_state = Ready;
-            charge_pile_index++;
-        }
+        setChargingPile();
+        charge_pile[charge_pile_index]=getOneOwnPile(charge_pile_index);
+        u1_printf("set charge pile No.%d\n", charge_pile_index);
     }
 }
 
@@ -371,9 +374,14 @@ int32_t Drive_Value(Drive_Order drive_order) // 计算订单价值
 {
     int32_t value;
     if (drive_order.state == To_Deliver)
-        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit) + Value_Distance * 1.0 / Get_Manhattan_Distance(drive_order.order.depPos, getVehiclePos()) + Value_Distance * 1.0 / Get_Manhattan_Distance(drive_order.order.desPos, drive_order.order.depPos);
+        value = Value_Commission * drive_order.order.commission
+                + Value_Time * 1.0 / (drive_order.order.timeLimit)
+                + Value_Distance * 1.0 / Get_Distance(drive_order.order.depPos.x, drive_order.order.depPos.y, getVehiclePos().x, getVehiclePos().y)
+                + Value_Distance * 1.0 / Get_Distance(drive_order.order.desPos.x, drive_order.order.desPos.y, drive_order.order.depPos.x, drive_order.order.depPos.y);
     else if (drive_order.state == Delivering)
-        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit - getGameTime() + drive_order.receive_time) + Value_Distance * 1.0 / Get_Manhattan_Distance(drive_order.order.desPos, getVehiclePos());
+        value = Value_Commission * drive_order.order.commission
+                + Value_Time * 1.0 / (drive_order.order.timeLimit - getGameTime() + drive_order.receive_time)
+                + Value_Distance * 1.0 / Get_Distance(drive_order.order.desPos.x, drive_order.order.desPos.y, getVehiclePos().x, getVehiclePos().y);
     else if (drive_order.state == Delivered)
         value = -Value_Threshold__Change;
     return value;
@@ -466,31 +474,23 @@ void Drive_Simple()                             // 简单逻辑
 void Drive() // 主逻辑
 {
     if (getGameStatus() == GameStandby)
-    {
-        u1_printf("GameStandby\n");
         return;
-    }
     switch (getGameStage())
     {
     case FirstHalf:
-        u1_printf("FirstHalf\n");
         if (getGameTime() + Time_Threshold__Only_Deliver < 60000)
             drive_only_deliver = 1;
         Drive_Set_Charge_Pile();
         break;
     case SecondHalf:
-        u1_printf("SecondHalf\n");
         if (getGameTime() + Time_Threshold__Only_Deliver < 180000 + 60000)
             drive_only_deliver = 1;
         break;
     default:
         return;
     }
-
     Drive_Receive_New_Order();
     Drive_Update_Order_State();
-    if (getOwnChargingPileNum() < 3)
-        return;
     if (getOwnChargingPileNum() && getRemainDist() < RemainDistance_Threshold__Charge)
         Drive_Charge();
     else
