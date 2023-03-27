@@ -32,6 +32,13 @@ float Get_Distance(int16_t x1, int16_t y1, int16_t x2, int16_t y2) // 计算两�
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
 }
 
+uint16_t Get_Manhattan_Distance(Position_edc24 p1, Position_edc24 p2) // 计算两点间曼哈顿距离
+{
+    uint16_t d1 = (p1.x - p2.x) > 0 ? (p1.x - p2.x) : (p2.x - p1.x);
+    uint16_t d2 = (p1.y - p2.y) > 0 ? (p1.y - p2.y) : (p2.y - p1.y);
+    return (d1 + d2) > 0 ? (d1 + d2) : 1;
+}
+
 uint16_t Get_Nearby_Node(uint16_t x, uint16_t y) // 获取最近的节点在 NodeList 的索引
 {
     float min_distance = 1e30;
@@ -67,6 +74,8 @@ void Drive_Init() // 初始化
 
 void Drive_Plan(uint16_t x_goal, uint16_t y_goal) // 进行一次路径规划
 {
+    if (x_goal == 0 || y_goal == 0)
+        return;
     Position_edc24 position = getVehiclePos();
     uint16_t begin_index = Get_Nearby_Node(position.x, position.y);
     uint16_t end_index = Get_Nearby_Node(x_goal, y_goal);
@@ -126,7 +135,7 @@ void Go_to(uint16_t x_goal, uint16_t y_goal) // 前往目标点
                 xPosPid.goal = x_step_goal;
                 yPosPid.goal = y_step_goal;
 
-                u1_printf("Going:x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
+                u1_printf("Going: position:(%d,%d), goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_step_goal, y_step_goal, angle.z, drive_angle_goal);
             }
         }
     }
@@ -146,7 +155,7 @@ void Go_to(uint16_t x_goal, uint16_t y_goal) // 前往目标点
             xPosPid.goal = x_goal;
             yPosPid.goal = y_goal;
 
-            u1_printf("Approaching:x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_goal, y_goal, angle.z, drive_angle_goal);
+            u1_printf("Approaching: x:%d, y:%d, goal:(%d, %d), currentAngle=%3.3f, angle=%3.3f\n", position.x, position.y, x_goal, y_goal, angle.z, drive_angle_goal);
         }
     }
 }
@@ -242,9 +251,11 @@ void Drive_Set_Charge_Pile()   // 循环调用以设置 3 个充电桩
 {
     if (charge_pile_index < 3)
     {
+        deliver_state_simple = To_Dep;
         Go_to(charge_pile[charge_pile_index].x, charge_pile[charge_pile_index].y);
         if (drive_state == Approaching)
         {
+            u1_printf("set charge pile %d\n", charge_pile_index);
             setChargingPile();
             charge_pile[charge_pile_index] = getOneOwnPile(charge_pile_index);
             drive_state = Ready;
@@ -262,12 +273,14 @@ void Drive_Receive_New_Order() // 将新订单加入 drive_order 数组
         {
             drive_order[drive_order_total].order = order;
             drive_order[drive_order_total].state = To_Deliver;
+            u1_printf("new order: %d\n", order.orderId);
             drive_order_total++;
         }
         else if (order.orderId != drive_order[drive_order_total - 1].order.orderId)
         {
             drive_order[drive_order_total].order = order;
             drive_order[drive_order_total].state = To_Deliver;
+            u1_printf("new order: %d\n", order.orderId);
             drive_order_total++;
         }
     }
@@ -293,6 +306,7 @@ void Drive_Update_Order_State()                 // 更新订单状态
             {
                 drive_order[i].state = Delivering;
                 drive_order[i].receive_time = getGameTime();
+                u1_printf("update order state: order %d is delivering\n", drive_order[i].order.orderId);
                 break;
             }
         }
@@ -313,6 +327,7 @@ void Drive_Update_Order_State()                 // 更新订单状态
                 if (j == order_delivering_num)
                 {
                     drive_order[i].state = Delivered;
+                    u1_printf("update order state: order %d is delivered\n", drive_order[i].order.orderId);
                     break;
                 }
             }
@@ -323,7 +338,10 @@ void Drive_Update_Order_State()                 // 更新订单状态
         if (drive_order[i].state == Delivering)
         {
             if (getGameTime() - drive_order[i].receive_time > drive_order[i].order.timeLimit + Time_Threshold__Abandon_Order) // 超时未送达
+            {
                 drive_order[i].state = Delivered;
+                u1_printf("update order state: order %d is delivered\n", drive_order[i].order.orderId);
+            }
         }
     }
     drive_update_order_state_order_num = order_delivering_num;
@@ -353,9 +371,9 @@ int32_t Drive_Value(Drive_Order drive_order) // 计算订单价值
 {
     int32_t value;
     if (drive_order.state == To_Deliver)
-        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit);
+        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit) + Value_Distance * 1.0 / Get_Manhattan_Distance(drive_order.order.depPos, getVehiclePos()) + Value_Distance * 1.0 / Get_Manhattan_Distance(drive_order.order.desPos, drive_order.order.depPos);
     else if (drive_order.state == Delivering)
-        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit - getGameTime() + drive_order.receive_time);
+        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit - getGameTime() + drive_order.receive_time) + Value_Distance * 1.0 / Get_Manhattan_Distance(drive_order.order.desPos, getVehiclePos());
     else if (drive_order.state == Delivered)
         value = -Value_Threshold__Change;
     return value;
@@ -448,15 +466,20 @@ void Drive_Simple()                             // 简单逻辑
 void Drive() // 主逻辑
 {
     if (getGameStatus() == GameStandby)
+    {
+        u1_printf("GameStandby\n");
         return;
+    }
     switch (getGameStage())
     {
     case FirstHalf:
+        u1_printf("FirstHalf\n");
         if (getGameTime() + Time_Threshold__Only_Deliver < 60000)
             drive_only_deliver = 1;
         Drive_Set_Charge_Pile();
         break;
     case SecondHalf:
+        u1_printf("SecondHalf\n");
         if (getGameTime() + Time_Threshold__Only_Deliver < 180000 + 60000)
             drive_only_deliver = 1;
         break;
@@ -466,7 +489,8 @@ void Drive() // 主逻辑
 
     Drive_Receive_New_Order();
     Drive_Update_Order_State();
-
+    if (getOwnChargingPileNum() < 3)
+        return;
     if (getOwnChargingPileNum() && getRemainDist() < RemainDistance_Threshold__Charge)
         Drive_Charge();
     else

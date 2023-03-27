@@ -7,6 +7,7 @@
 #define Drive_Speed 2                                   // 速度上限，用于无位置 pid 的 Go_to 方案 2
 #define Value_Commission 1                              // 订单估值分数系数
 #define Value_Time 1                                    // 订单估值时间系数，剩余时间越短，估值越高
+#define Value_Distance 1                                // 订单估值距离系数，距离越短，估值越高
 #define Value_Threshold__Change 100                     // 价值阈值，订单价值与最优价值的差低于此阈值时，不更新最优订单
 #define Time_Threshold__Abandon_Order 5                 // 时间阈值，判定是否放弃订单
 #define Time_Threshold__Only_Deliver 0                  // 时间阈值，设置是否仅送货
