@@ -138,7 +138,8 @@ void Go_to(uint16_t x_goal, uint16_t y_goal) // 前往目标点
         Position_edc24 position = getVehiclePos();
         float distance = Get_Distance(position.x, position.y, x_goal, y_goal);
         if (distance < Distance_Threshold__Next_Node_For_Approaching) // 判定为到达
-        {    drive_state = Ready;
+        {
+            drive_state = Ready;
             u1_printf("Arrived\n");
         }
         else // 继续靠近目标点
@@ -259,10 +260,10 @@ void Drive_Set_Charge_Pile()   // 循环调用以设置 3 个充电桩
     //         charge_pile_index++;
     //     }
     // }
-    if(charge_pile_index<3 && getGameTime()%500==0)
+    if (charge_pile_index < 3 && getGameTime() % 500 == 0)
     {
         setChargingPile();
-        charge_pile[charge_pile_index]=getOneOwnPile(charge_pile_index);
+        charge_pile[charge_pile_index] = getOneOwnPile(charge_pile_index);
         u1_printf("set charge pile No.%d\n", charge_pile_index);
     }
 }
@@ -374,14 +375,9 @@ int32_t Drive_Value(Drive_Order drive_order) // 计算订单价值
 {
     int32_t value;
     if (drive_order.state == To_Deliver)
-        value = Value_Commission * drive_order.order.commission
-                + Value_Time * 1.0 / (drive_order.order.timeLimit)
-                + Value_Distance * 1.0 / Get_Distance(drive_order.order.depPos.x, drive_order.order.depPos.y, getVehiclePos().x, getVehiclePos().y)
-                + Value_Distance * 1.0 / Get_Distance(drive_order.order.desPos.x, drive_order.order.desPos.y, drive_order.order.depPos.x, drive_order.order.depPos.y);
+        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit) + Value_Distance * 1.0 / Get_Distance(drive_order.order.depPos.x, drive_order.order.depPos.y, getVehiclePos().x, getVehiclePos().y) + Value_Distance * 1.0 / Get_Distance(drive_order.order.desPos.x, drive_order.order.desPos.y, drive_order.order.depPos.x, drive_order.order.depPos.y);
     else if (drive_order.state == Delivering)
-        value = Value_Commission * drive_order.order.commission
-                + Value_Time * 1.0 / (drive_order.order.timeLimit - getGameTime() + drive_order.receive_time)
-                + Value_Distance * 1.0 / Get_Distance(drive_order.order.desPos.x, drive_order.order.desPos.y, getVehiclePos().x, getVehiclePos().y);
+        value = Value_Commission * drive_order.order.commission + Value_Time * 1.0 / (drive_order.order.timeLimit - getGameTime() + drive_order.receive_time) + Value_Distance * 1.0 / Get_Distance(drive_order.order.desPos.x, drive_order.order.desPos.y, getVehiclePos().x, getVehiclePos().y);
     else if (drive_order.state == Delivered)
         value = -Value_Threshold__Change;
     return value;
@@ -393,32 +389,33 @@ void Drive_Deliver_Order()                    // 接单或送单
 {
     if (drive_order[max_index].state == Delivered) // 最大价值订单已送达
         max_value = -Value_Threshold__Change;
-
-    for (int i = 0; i < drive_order_total; i++)
+    if (drive_state == Ready)
     {
-        int32_t value = Drive_Value(drive_order[i]);
-        if (value > max_value + Value_Threshold__Change)
+        for (int i = 0; i < drive_order_total; i++)
         {
-            max_value = value;
-            max_index = i;
+            int32_t value = Drive_Value(drive_order[i]);
+            if (value > max_value + Value_Threshold__Change)
+            {
+                max_value = value;
+                max_index = i;
+            }
         }
+        if (max_value > 0) // 有订单可执行
+        {
+            if (drive_order[max_index].state == To_Deliver)
+            {
+                Go_to(drive_order[max_index].order.depPos.x, drive_order[max_index].order.depPos.y);
+                deliver_state_simple = To_Dep;
+            }
+            else if (drive_order[max_index].state == Delivering)
+            {
+                Go_to(drive_order[max_index].order.desPos.x, drive_order[max_index].order.desPos.y);
+                deliver_state_simple = Dep_to_Des;
+            }
+        }
+        else
+            deliver_state_simple = No_Order;
     }
-
-    if (max_value > 0) // 有订单可执行
-    {
-        if (drive_order[max_index].state == To_Deliver)
-        {
-            Go_to(drive_order[max_index].order.depPos.x, drive_order[max_index].order.depPos.y);
-            deliver_state_simple = To_Dep;
-        }
-        else if (drive_order[max_index].state == Delivering)
-        {
-            Go_to(drive_order[max_index].order.desPos.x, drive_order[max_index].order.desPos.y);
-            deliver_state_simple = Dep_to_Des;
-        }
-    }
-    else
-        deliver_state_simple = No_Order;
 }
 
 int16_t drive_simple_lastOrderID = -1;          // （简单逻辑）上一次订单 id
