@@ -3,11 +3,11 @@
 <title>Static Call Graph - [test1\test1.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image test1\test1.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6180002: Last Updated: Tue Mar 28 17:22:55 2023
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 6180002: Last Updated: Mon Mar 27 11:22:11 2023
 <BR><P>
-<H3>Maximum Stack Usage =        672 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
+<H3>Maximum Stack Usage =        616 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
-main &rArr; Drive &rArr; Drive_Deliver_Order &rArr; Go_to &rArr; Drive_Plan &rArr; u1_printf &rArr; HAL_UART_Transmit
+main &rArr; Drive &rArr; Drive_Deliver_Order &rArr; Go_to &rArr; u1_printf &rArr; HAL_UART_Transmit
 <P>
 <H3>
 Mutually Recursive functions
@@ -442,7 +442,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[ea]"></a>strlen</STRONG> (Thumb, 14 bytes, Stack size 0 bytes, strlen.o(.text))
-<BR><BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<BR><BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
 </UL>
 
 <P><STRONG><a name="[6d]"></a>__aeabi_dadd</STRONG> (Thumb, 322 bytes, Stack size 48 bytes, dadd.o(.text))
@@ -683,8 +683,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Plan
 </UL>
 
-<P><STRONG><a name="[85]"></a>Drive</STRONG> (Thumb, 366 bytes, Stack size 48 bytes, drive.o(.text.Drive))
-<BR><BR>[Stack]<UL><LI>Max Depth = 664<LI>Call Chain = Drive &rArr; Drive_Deliver_Order &rArr; Go_to &rArr; Drive_Plan &rArr; u1_printf &rArr; HAL_UART_Transmit
+<P><STRONG><a name="[85]"></a>Drive</STRONG> (Thumb, 338 bytes, Stack size 48 bytes, drive.o(.text.Drive))
+<BR><BR>[Stack]<UL><LI>Max Depth = 608<LI>Call Chain = Drive &rArr; Drive_Deliver_Order &rArr; Go_to &rArr; u1_printf &rArr; HAL_UART_Transmit
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getRemainDist
 <LI><a href="#[87]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getGameStage
@@ -693,17 +693,17 @@ Global Symbols
 <LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getOwnChargingPileNum
 <LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Charge
 <LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Update_Order_State
-<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getLatestPendingOrder
+<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getLatestPendingOrder
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getOneOwnPile
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;setChargingPile
 <LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getGameTime
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
 <P><STRONG><a name="[90]"></a>Drive_Charge</STRONG> (Thumb, 124 bytes, Stack size 32 bytes, drive.o(.text.Drive_Charge))
-<BR><BR>[Stack]<UL><LI>Max Depth = 600<LI>Call Chain = Drive_Charge &rArr; Go_to &rArr; Drive_Plan &rArr; u1_printf &rArr; HAL_UART_Transmit
+<BR><BR>[Stack]<UL><LI>Max Depth = 544<LI>Call Chain = Drive_Charge &rArr; Go_to &rArr; u1_printf &rArr; HAL_UART_Transmit
 </UL>
 <BR>[Calls]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getOwnChargingPileNum
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getOneOwnPile
@@ -716,8 +716,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive
 </UL>
 
-<P><STRONG><a name="[91]"></a>Drive_Deliver_Order</STRONG> (Thumb, 240 bytes, Stack size 48 bytes, drive.o(.text.Drive_Deliver_Order))
-<BR><BR>[Stack]<UL><LI>Max Depth = 616<LI>Call Chain = Drive_Deliver_Order &rArr; Go_to &rArr; Drive_Plan &rArr; u1_printf &rArr; HAL_UART_Transmit
+<P><STRONG><a name="[91]"></a>Drive_Deliver_Order</STRONG> (Thumb, 188 bytes, Stack size 48 bytes, drive.o(.text.Drive_Deliver_Order))
+<BR><BR>[Stack]<UL><LI>Max Depth = 560<LI>Call Chain = Drive_Deliver_Order &rArr; Go_to &rArr; u1_printf &rArr; HAL_UART_Transmit
 </UL>
 <BR>[Calls]<UL><LI><a href="#[95]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Value
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Go_to
@@ -729,11 +729,10 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[96]"></a>Drive_Plan</STRONG> (Thumb, 288 bytes, Stack size 56 bytes, drive.o(.text.Drive_Plan))
-<BR><BR>[Stack]<UL><LI>Max Depth = 512<LI>Call Chain = Drive_Plan &rArr; u1_printf &rArr; HAL_UART_Transmit
+<P><STRONG><a name="[96]"></a>Drive_Plan</STRONG> (Thumb, 264 bytes, Stack size 48 bytes, drive.o(.text.Drive_Plan))
+<BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = Drive_Plan &rArr; __hardfp_sqrt &rArr; _dsqrt &rArr; _double_round
 </UL>
-<BR>[Calls]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
-<LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Dijkstra
+<BR>[Calls]<UL><LI><a href="#[83]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Dijkstra
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getVehiclePos
 <LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_d2f
 <LI><a href="#[75]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_i2d
@@ -742,13 +741,13 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Go_to
 </UL>
 
-<P><STRONG><a name="[8d]"></a>Drive_Update_Order_State</STRONG> (Thumb, 628 bytes, Stack size 56 bytes, drive.o(.text.Drive_Update_Order_State))
-<BR><BR>[Stack]<UL><LI>Max Depth = 512<LI>Call Chain = Drive_Update_Order_State &rArr; u1_printf &rArr; HAL_UART_Transmit
+<P><STRONG><a name="[8d]"></a>Drive_Update_Order_State</STRONG> (Thumb, 596 bytes, Stack size 48 bytes, drive.o(.text.Drive_Update_Order_State))
+<BR><BR>[Stack]<UL><LI>Max Depth = 504<LI>Call Chain = Drive_Update_Order_State &rArr; u1_printf &rArr; HAL_UART_Transmit
 </UL>
 <BR>[Calls]<UL><LI><a href="#[98]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getOneOrder
 <LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getOrderNum
 <LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getGameTime
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive
 </UL>
@@ -783,11 +782,11 @@ Global Symbols
 <LI><a href="#[ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_TIM2_Init
 </UL>
 
-<P><STRONG><a name="[94]"></a>Go_to</STRONG> (Thumb, 552 bytes, Stack size 56 bytes, drive.o(.text.Go_to))
-<BR><BR>[Stack]<UL><LI>Max Depth = 568<LI>Call Chain = Go_to &rArr; Drive_Plan &rArr; u1_printf &rArr; HAL_UART_Transmit
+<P><STRONG><a name="[94]"></a>Go_to</STRONG> (Thumb, 544 bytes, Stack size 56 bytes, drive.o(.text.Go_to))
+<BR><BR>[Stack]<UL><LI>Max Depth = 512<LI>Call Chain = Go_to &rArr; u1_printf &rArr; HAL_UART_Transmit
 </UL>
-<BR>[Calls]<UL><LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_f2d
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<BR>[Calls]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<LI><a href="#[99]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_f2d
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getVehiclePos
 <LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Plan
 <LI><a href="#[78]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_d2f
@@ -1181,7 +1180,7 @@ Global Symbols
 </UL>
 <BR>[Called By]<UL><LI><a href="#[e7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;reqGameInfo
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;setChargingPile
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
 <LI><a href="#[df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;initAngle
 </UL>
 
@@ -1432,7 +1431,7 @@ Global Symbols
 <LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Update_Order_State
 </UL>
 
-<P><STRONG><a name="[8c]"></a>getLatestPendingOrder</STRONG> (Thumb, 50 bytes, Stack size 8 bytes, zigbee_edc24.o(.text.getLatestPendingOrder))
+<P><STRONG><a name="[8b]"></a>getLatestPendingOrder</STRONG> (Thumb, 50 bytes, Stack size 8 bytes, zigbee_edc24.o(.text.getLatestPendingOrder))
 <BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = getLatestPendingOrder
 </UL>
 <BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive
@@ -1489,7 +1488,7 @@ Global Symbols
 </UL>
 
 <P><STRONG><a name="[5b]"></a>main</STRONG> (Thumb, 576 bytes, Stack size 8 bytes, main.o(.text.main))
-<BR><BR>[Stack]<UL><LI>Max Depth = 672<LI>Call Chain = main &rArr; Drive &rArr; Drive_Deliver_Order &rArr; Go_to &rArr; Drive_Plan &rArr; u1_printf &rArr; HAL_UART_Transmit
+<BR><BR>[Stack]<UL><LI>Max Depth = 616<LI>Call Chain = main &rArr; Drive &rArr; Drive_Deliver_Order &rArr; Go_to &rArr; u1_printf &rArr; HAL_UART_Transmit
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[e2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_Base_Start_IT
@@ -1516,7 +1515,7 @@ Global Symbols
 <LI><a href="#[e5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;zigbee_Init
 <LI><a href="#[bc]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UARTEx_ReceiveToIdle_DMA
 <LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive
-<LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
 <LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;getVehiclePos
 <LI><a href="#[e6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Init
 <LI><a href="#[df]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;initAngle
@@ -1555,7 +1554,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive
 </UL>
 
-<P><STRONG><a name="[8b]"></a>u1_printf</STRONG> (Thumb, 62 bytes, Stack size 424 bytes, usart.o(.text.u1_printf))
+<P><STRONG><a name="[8c]"></a>u1_printf</STRONG> (Thumb, 62 bytes, Stack size 424 bytes, usart.o(.text.u1_printf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 456<LI>Call Chain = u1_printf &rArr; HAL_UART_Transmit
 </UL>
 <BR>[Calls]<UL><LI><a href="#[c8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Transmit
@@ -1566,7 +1565,6 @@ Global Symbols
 <LI><a href="#[85]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive
 <LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Update_Order_State
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Go_to
-<LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;Drive_Plan
 </UL>
 
 <P><STRONG><a name="[e8]"></a>zigbeeMessageRecord</STRONG> (Thumb, 332 bytes, Stack size 40 bytes, zigbee_edc24.o(.text.zigbeeMessageRecord))
@@ -1602,7 +1600,7 @@ Global Symbols
 <P><STRONG><a name="[e9]"></a>vsprintf</STRONG> (Thumb, 0 bytes, Stack size 24 bytes, printfa.o(i.__0vsprintf))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = vsprintf
 </UL>
-<BR>[Called By]<UL><LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
+<BR>[Called By]<UL><LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;u1_printf
 </UL>
 
 <P><STRONG><a name="[93]"></a>__hardfp_sqrt</STRONG> (Thumb, 122 bytes, Stack size 32 bytes, sqrt.o(i.__hardfp_sqrt))
