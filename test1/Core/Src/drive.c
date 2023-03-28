@@ -265,6 +265,7 @@ void Drive_Set_Charge_Pile()   // 循环调用以设置 3 个充电桩
         setChargingPile();
         charge_pile[charge_pile_index] = getOneOwnPile(charge_pile_index);
         u1_printf("set charge pile No.%d\n", charge_pile_index);
+        charge_pile_index++;
     }
 }
 
@@ -299,12 +300,12 @@ void Drive_Update_Order_State()                 // 更新订单状态
     // 超时未送达：Delivering -> Delivered
 
     uint8_t order_delivering_num = getOrderNum(); // 正在运送的订单数
-    for (int i = 0; i < order_delivering_num; i++)
+    for (int16_t i = 0; i < order_delivering_num; i++)
         delivering_order_id[i] = getOneOrder(i).orderId;
 
     if (order_delivering_num > drive_update_order_state_order_num) // 携带订单数 +1
     {
-        for (int i = drive_order_total - 1; i >= 0; i--)
+        for (int16_t i = drive_order_total - 1; i >= 0; i--)
         {
             if (drive_order[i].order.orderId == delivering_order_id[order_delivering_num])
             {
@@ -317,11 +318,11 @@ void Drive_Update_Order_State()                 // 更新订单状态
     }
     else if (order_delivering_num < drive_update_order_state_order_num) // 携带订单数 -1
     {
-        for (int i = drive_order_total - 1; i >= 0; i--)
+        for (int16_t i = drive_order_total - 1; i >= 0; i--)
         {
             if (drive_order[i].state == Delivering)
             {
-                int j = 0;
+                int16_t j = 0;
                 int16_t old_id = drive_order[i].order.orderId;
                 for (; j < order_delivering_num; j++)
                 {
@@ -337,7 +338,7 @@ void Drive_Update_Order_State()                 // 更新订单状态
             }
         }
     }
-    for (int i = 0; i < drive_order_total; i++)
+    for (int16_t i = 0; i < drive_order_total; i++)
     {
         if (drive_order[i].state == Delivering)
         {
@@ -391,7 +392,7 @@ void Drive_Deliver_Order()                    // 接单或送单
         max_value = -Value_Threshold__Change;
     if (drive_state == Ready)
     {
-        for (int i = 0; i < drive_order_total; i++)
+        for (int16_t i = 0; i < drive_order_total; i++)
         {
             int32_t value = Drive_Value(drive_order[i]);
             if (value > max_value + Value_Threshold__Change)
@@ -475,12 +476,12 @@ void Drive() // 主逻辑
     switch (getGameStage())
     {
     case FirstHalf:
-        if (getGameTime() + Time_Threshold__Only_Deliver < 60000)
+        if (getGameTime() + Time_Threshold__Only_Deliver > 60000)
             drive_only_deliver = 1;
         Drive_Set_Charge_Pile();
         break;
     case SecondHalf:
-        if (getGameTime() + Time_Threshold__Only_Deliver < 180000 + 60000)
+        if (getGameTime() + Time_Threshold__Only_Deliver > 180000 + 60000)
             drive_only_deliver = 1;
         break;
     default:
