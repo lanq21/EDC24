@@ -1,0 +1,223 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0/win10-x64",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {},
+    ".NETCoreApp,Version=v6.0/win10-x64": {
+      "EdcHost/1.0.0": {
+        "dependencies": {
+          "OpenCvSharp4": "4.6.0.20220608",
+          "OpenCvSharp4.Extensions": "4.6.0.20220608",
+          "OpenCvSharp4.runtime.win": "4.6.0.20220608",
+          "System.IO.Ports": "7.0.0",
+          "YamlDotNet": "13.0.2"
+        },
+        "runtime": {
+          "EdcHost.dll": {}
+        }
+      },
+      "Microsoft.NETCore.Platforms/5.0.0": {},
+      "Microsoft.Win32.SystemEvents/5.0.0": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "5.0.0"
+        }
+      },
+      "OpenCvSharp4/4.6.0.20220608": {
+        "dependencies": {
+          "System.Memory": "4.5.4",
+          "System.Runtime.CompilerServices.Unsafe": "6.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/OpenCvSharp.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "OpenCvSharp4.Extensions/4.6.0.20220608": {
+        "dependencies": {
+          "OpenCvSharp4": "4.6.0.20220608",
+          "System.Drawing.Common": "5.0.3"
+        },
+        "runtime": {
+          "lib/net6.0/OpenCvSharp.Extensions.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "OpenCvSharp4.runtime.win/4.6.0.20220608": {
+        "native": {
+          "runtimes/win-x64/native/OpenCvSharpExtern.dll": {
+            "fileVersion": "0.0.0.0"
+          },
+          "runtimes/win-x64/native/opencv_videoio_ffmpeg460_64.dll": {
+            "fileVersion": "2022.5.0.0"
+          }
+        }
+      },
+      "runtime.linux-arm.runtime.native.System.IO.Ports/7.0.0": {},
+      "runtime.linux-arm64.runtime.native.System.IO.Ports/7.0.0": {},
+      "runtime.linux-x64.runtime.native.System.IO.Ports/7.0.0": {},
+      "runtime.native.System.IO.Ports/7.0.0": {
+        "dependencies": {
+          "runtime.linux-arm.runtime.native.System.IO.Ports": "7.0.0",
+          "runtime.linux-arm64.runtime.native.System.IO.Ports": "7.0.0",
+          "runtime.linux-x64.runtime.native.System.IO.Ports": "7.0.0",
+          "runtime.osx-arm64.runtime.native.System.IO.Ports": "7.0.0",
+          "runtime.osx-x64.runtime.native.System.IO.Ports": "7.0.0"
+        }
+      },
+      "runtime.osx-arm64.runtime.native.System.IO.Ports/7.0.0": {},
+      "runtime.osx-x64.runtime.native.System.IO.Ports/7.0.0": {},
+      "System.Drawing.Common/5.0.3": {
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "5.0.0"
+        }
+      },
+      "System.IO.Ports/7.0.0": {
+        "dependencies": {
+          "runtime.native.System.IO.Ports": "7.0.0"
+        },
+        "runtime": {
+          "runtimes/win/lib/net6.0/System.IO.Ports.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.22.51805"
+          }
+        }
+      },
+      "System.Memory/4.5.4": {},
+      "System.Runtime.CompilerServices.Unsafe/6.0.0": {},
+      "YamlDotNet/13.0.2": {
+        "runtime": {
+          "lib/net6.0/YamlDotNet.dll": {
+            "assemblyVersion": "13.0.0.0",
+            "fileVersion": "13.0.2.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "EdcHost/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.NETCore.Platforms/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-VyPlqzH2wavqquTcYpkIIAQ6WdenuKoFN0BdYBbCWsclXacSOHNQn66Gt4z5NBqEYW0FAPm5rlvki9ZiCij5xQ==",
+      "path": "microsoft.netcore.platforms/5.0.0",
+      "hashPath": "microsoft.netcore.platforms.5.0.0.nupkg.sha512"
+    },
+    "Microsoft.Win32.SystemEvents/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Bh6blKG8VAKvXiLe2L+sEsn62nc1Ij34MrNxepD2OCrS5cpCwQa9MeLyhVQPQ/R4Wlzwuy6wMK8hLb11QPDRsQ==",
+      "path": "microsoft.win32.systemevents/5.0.0",
+      "hashPath": "microsoft.win32.systemevents.5.0.0.nupkg.sha512"
+    },
+    "OpenCvSharp4/4.6.0.20220608": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+/EMZE0DodSRFHFniAMNRDYKr5cTBxUu0QABRcGT6duqopHZyeXX/siqbCorflkks2fpDHPB4Om/JoGzE3tHkA==",
+      "path": "opencvsharp4/4.6.0.20220608",
+      "hashPath": "opencvsharp4.4.6.0.20220608.nupkg.sha512"
+    },
+    "OpenCvSharp4.Extensions/4.6.0.20220608": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-javgNfBBevwGRzDuAi1UQzqmRSMPCbv6CC2xML8BaE0utN+sUB+VapXmT1ANgy0554rTSrbcnfsjI6yB/87vaA==",
+      "path": "opencvsharp4.extensions/4.6.0.20220608",
+      "hashPath": "opencvsharp4.extensions.4.6.0.20220608.nupkg.sha512"
+    },
+    "OpenCvSharp4.runtime.win/4.6.0.20220608": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-8NaKBXUJQXDMpSM6qSBuzanYcwAkwgSFRaMuxDb8Gz9/MfWEraQ99WAxb0CydeOukPvczKLZkvnY1nBLU48BGg==",
+      "path": "opencvsharp4.runtime.win/4.6.0.20220608",
+      "hashPath": "opencvsharp4.runtime.win.4.6.0.20220608.nupkg.sha512"
+    },
+    "runtime.linux-arm.runtime.native.System.IO.Ports/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-CBvgRaF+M0xGLDv2Geb/0v0LEADheH8aK72GRAUJdnqnJVsQO60ki1XO8M3keEhnjm+T5NvLm41pNXAVYAPiSg==",
+      "path": "runtime.linux-arm.runtime.native.system.io.ports/7.0.0",
+      "hashPath": "runtime.linux-arm.runtime.native.system.io.ports.7.0.0.nupkg.sha512"
+    },
+    "runtime.linux-arm64.runtime.native.System.IO.Ports/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-5VCyRCtCIYU8FR/W8oo7ouFuJ8tmAg9ddsuXhfCKZfZrbaVZSKxkmNBa6fxkfYPueD0jQfOvwFBmE5c6zalCSw==",
+      "path": "runtime.linux-arm64.runtime.native.system.io.ports/7.0.0",
+      "hashPath": "runtime.linux-arm64.runtime.native.system.io.ports.7.0.0.nupkg.sha512"
+    },
+    "runtime.linux-x64.runtime.native.System.IO.Ports/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DV9dWDUs23OoZqMWl5IhLr3D+b9koDiSHQxFKdYgWnQbnthv8c/yDjrlrI8nMrDc71RAKCO8jlUojzuPMX04gg==",
+      "path": "runtime.linux-x64.runtime.native.system.io.ports/7.0.0",
+      "hashPath": "runtime.linux-x64.runtime.native.system.io.ports.7.0.0.nupkg.sha512"
+    },
+    "runtime.native.System.IO.Ports/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-L4Ivegqc3B0Fee7VifFy2JST9nndm+uvJ0viLIZUaImDfnr+JmRin9Tbqd56KuMtm0eVxHpNOWZBPtKrA/1h5Q==",
+      "path": "runtime.native.system.io.ports/7.0.0",
+      "hashPath": "runtime.native.system.io.ports.7.0.0.nupkg.sha512"
+    },
+    "runtime.osx-arm64.runtime.native.System.IO.Ports/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-jFwh4sKSXZ7al5XrItEO4GdGWa6XNxvNx+LhEHjrSzOwawO1znwJ+Dy+VjnrkySX9Qi4bnHNLoiqOXbqMuka4g==",
+      "path": "runtime.osx-arm64.runtime.native.system.io.ports/7.0.0",
+      "hashPath": "runtime.osx-arm64.runtime.native.system.io.ports.7.0.0.nupkg.sha512"
+    },
+    "runtime.osx-x64.runtime.native.System.IO.Ports/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-X4LrHEfke/z9+z+iuVr35NlkhdZldY8JGNMYUN+sfPK/U/6TcE+vP44I0Yv0ir1v0bqIzq3v6Qdv1c1vmp8s4g==",
+      "path": "runtime.osx-x64.runtime.native.system.io.ports/7.0.0",
+      "hashPath": "runtime.osx-x64.runtime.native.system.io.ports.7.0.0.nupkg.sha512"
+    },
+    "System.Drawing.Common/5.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rEQZuslijqdsO0pkJn7LtGBaMc//YVA8de0meGihkg9oLPaN+w+/Pb5d71lgp0YjPoKgBKNMvdq0IPnoW4PEng==",
+      "path": "system.drawing.common/5.0.3",
+      "hashPath": "system.drawing.common.5.0.3.nupkg.sha512"
+    },
+    "System.IO.Ports/7.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-0nWQjM5IofaIGpvkifN+LLuYwBG6BHlpmphLhhOJepcW12G8qToGuNDRgBzeTVBZzp33wVsESSZ8hUOCfq+8QA==",
+      "path": "system.io.ports/7.0.0",
+      "hashPath": "system.io.ports.7.0.0.nupkg.sha512"
+    },
+    "System.Memory/4.5.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-1MbJTHS1lZ4bS4FmsJjnuGJOu88ZzTT2rLvrhW7Ygic+pC0NWA+3hgAen0HRdsocuQXCkUTdFn9yHJJhsijDXw==",
+      "path": "system.memory/4.5.4",
+      "hashPath": "system.memory.4.5.4.nupkg.sha512"
+    },
+    "System.Runtime.CompilerServices.Unsafe/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/iUeP3tq1S0XdNNoMz5C9twLSrM/TH+qElHkXWaPvuNOt+99G75NrV0OS2EqHx5wMN7popYjpc8oTjC1y16DLg==",
+      "path": "system.runtime.compilerservices.unsafe/6.0.0",
+      "hashPath": "system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512"
+    },
+    "YamlDotNet/13.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hRPqCt2bxTvHN6iT2JNG2KznDPFgD5B6j0bQ7woSpfGctmjgAYdKQ+LYHUaj/7q8sN1AbIcTNbaO75g8IFmTjw==",
+      "path": "yamldotnet/13.0.2",
+      "hashPath": "yamldotnet.13.0.2.nupkg.sha512"
+    }
+  }
+}

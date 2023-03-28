@@ -43,7 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAX_SPEED 40
+#define MAX_SPEED 20
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -132,6 +132,7 @@ int main(void)
 	MX_USART3_UART_Init();
 	MX_TIM7_Init();
 	MX_TIM8_Init();
+	MX_TIM1_Init();
 	/* USER CODE BEGIN 2 */
 
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_1);
@@ -140,7 +141,7 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 	HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
-	HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+	HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
 	HAL_TIM_Encoder_Start(&htim8, TIM_CHANNEL_ALL);
 
 	HAL_TIM_Base_Start_IT(&htim7);
@@ -155,10 +156,10 @@ int main(void)
 	HAL_Delay(500);
 	state = running;
 
-	pid_init(&speedPid[0], 1.0f, 0.05f, 0.0f);
-	pid_init(&speedPid[1], 1.0f, 0.05f, 0.0f);
-	pid_init(&speedPid[2], 1.0f, 0.05f, 0.0f);
-	pid_init(&speedPid[3], 1.0f, 0.05f, 0.0f);
+	pid_init(&speedPid[0], 2.0f, 0.1f, 0.0f);
+	pid_init(&speedPid[1], 2.0f, 0.1f, 0.0f);
+	pid_init(&speedPid[2], 2.0f, 0.1f, 0.0f);
+	pid_init(&speedPid[3], 2.0f, 0.1f, 0.0f);
 
 	pid_init(&xPosPid, 1.4f, 0.012f, 0.1f);
 	pid_init(&yPosPid, 1.4f, 0.012f, 0.1f);
@@ -179,29 +180,28 @@ int main(void)
 	/* USER CODE BEGIN WHILE */
 	uint32_t idx = 0;
 	uint8_t built = 0;
-	uint8_t charge_pile_set = 0;
 	Drive_Init();
 	while (1)
 	{
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		// setSpeed(1,10);
-		// setSpeed(2,20);
-		// setSpeed(3,30);
-		// setSpeed(4,40);
-		/*if(idx%200<100){
-			setSpeed(3,20);
-			setSpeed(1,20);
-			setSpeed(2,20);
-			setSpeed(4,20);
-		}else{
-			setSpeed(3,-20);
-			setSpeed(1,-20);
-			setSpeed(2,-20);
-			setSpeed(4,-20);
+
+		if (idx % 200 < 100)
+		{
+			// setSpeed(3,60);
+			// setSpeed(1,60);
+			// setSpeed(2,60);
+			// setSpeed(4,60);
 		}
-		idx++;*/
+		else
+		{
+			// setSpeed(3,-60);
+			// setSpeed(1,-60);
+			// setSpeed(2,-60);
+			// setSpeed(4,-60);
+		}
+		idx++;
 		if (receive_flag)
 		{
 			// u1_printf("6\n");
@@ -225,20 +225,10 @@ int main(void)
 				}
 			}
 		}
-		else
-		{
-		}
 		if (built)
 		{
-			// if(charge_pile_set==0)
-			//	charge_pile_set=Set_Charge_Pile();
-			// else
-
-			Drive_Simple();
-
-			// Go_to(100,100);
+			Drive();
 		}
-		// u1_printf("%d, %d, %d, %d\n", speed[0], speed[1], speed[2], speed[3]);
 		// Position_edc24 tmppos=getVehiclePos();
 		// u1_printf("x:%d, y:%d\n", tmppos.x, tmppos.y);
 	}
@@ -311,13 +301,13 @@ void setSpeed(uint8_t idx, double speed)
 	{
 		if (speed > 0)
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 1);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 1);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 0);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 0);
 			speed = -speed;
 		}
 		__HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_2, 2000 * speed / 100);
@@ -341,18 +331,20 @@ void setSpeed(uint8_t idx, double speed)
 	{
 		if (speed > 0)
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, 0);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, 0);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, 1);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, 1);
 			speed = -speed;
 		}
 		__HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_4, 2000 * speed / 100);
 	}
 }
+
+uint16_t idx = 0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
@@ -365,6 +357,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{
 			vx = 0;
 			vy = 0;
+			idx++;
+			if (idx % 100 < 50)
+			{
+				vy = 10;
+			}
+			else
+			{
+				vy = -10;
+			}
+			if (idx > 100)
+			{
+				idx = 0;
+			}
 		}
 		if (vx > MAX_SPEED)
 			vx = MAX_SPEED;
@@ -424,7 +429,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			tmp -= 65536;
 		speed[2] = coff * (float)tmp + (1 - coff) * speed[2];
 
-		tmp = __HAL_TIM_GET_COUNTER(&htim4);
+		tmp = __HAL_TIM_GET_COUNTER(&htim1);
 		if (tmp >= 32768)
 			tmp -= 65536;
 		speed[3] = coff * (float)tmp + (1 - coff) * speed[3];
@@ -438,7 +443,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		__HAL_TIM_SetCounter(&htim8, 0);
 		__HAL_TIM_SetCounter(&htim2, 0);
 		__HAL_TIM_SetCounter(&htim3, 0);
-		__HAL_TIM_SetCounter(&htim4, 0);
+		__HAL_TIM_SetCounter(&htim1, 0);
 
 		/*
 		for(uint8_t i=0;i<4;++i){
@@ -457,24 +462,28 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if (tht1 < -70)
 			tht1 = -70;
 		setSpeed(1, -tht1);
+		// setSpeed(1,10);
 
 		if (tht2 > 70)
 			tht2 = 70;
 		if (tht2 < -70)
 			tht2 = -70;
 		setSpeed(2, -tht2);
+		// setSpeed(2,10);
 
 		if (tht3 > 70)
 			tht3 = 70;
 		if (tht3 < -70)
 			tht3 = -70;
 		setSpeed(3, -tht3);
+		// setSpeed(3,10);
 
 		if (tht4 > 70)
 			tht4 = 70;
 		if (tht4 < -70)
 			tht4 = -70;
 		setSpeed(4, -tht4);
+		// setSpeed(4,10);
 	}
 }
 
