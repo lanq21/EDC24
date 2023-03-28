@@ -476,12 +476,16 @@ void Drive() // 主逻辑
     switch (getGameStage())
     {
     case FirstHalf:
-        if (getGameTime() + Time_Threshold__Only_Deliver > 60000)
+        if (getGameTime() + Time_Threshold__Only_Deliver < 60000)
+            drive_only_deliver = 0;
+        else
             drive_only_deliver = 1;
         Drive_Set_Charge_Pile();
         break;
     case SecondHalf:
-        if (getGameTime() + Time_Threshold__Only_Deliver > 180000 + 60000)
+        if (getGameTime() + Time_Threshold__Only_Deliver < 180000 + 60000)
+            drive_only_deliver = 0;
+        else
             drive_only_deliver = 1;
         break;
     default:
