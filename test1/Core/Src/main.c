@@ -43,7 +43,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MAX_SPEED 20
+#define MAX_SPEED 60
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -161,12 +161,8 @@ int main(void)
 	pid_init(&speedPid[2], 2.0f, 0.1f, 0.0f);
 	pid_init(&speedPid[3], 2.0f, 0.1f, 0.0f);
 
-	pid_init(&xPosPid, 1.4f, 0.012f, 0.1f);
-	pid_init(&yPosPid, 1.4f, 0.012f, 0.1f);
-	// speedPid[0].goal=10;
-	// speedPid[1].goal=10;
-	// speedPid[2].goal=10;
-	// speedPid[3].goal=10;
+	pid_init(&xPosPid, 1.6f, 0.009f, 4.0f);
+	pid_init(&yPosPid, 1.4f, 0.002f, 4.0f);
 
 	pid_init(&zAnglePid, 1.1f, 0.04f, 0.01f);
 	zAnglePid.goal = 0;
@@ -186,47 +182,42 @@ int main(void)
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-
-		if (idx % 200 < 100)
-		{
-			// setSpeed(3,60);
-			// setSpeed(1,60);
-			// setSpeed(2,60);
-			// setSpeed(4,60);
-		}
-		else
-		{
-			// setSpeed(3,-60);
-			// setSpeed(1,-60);
-			// setSpeed(2,-60);
-			// setSpeed(4,-60);
-		}
-		idx++;
 		if (receive_flag)
 		{
-			// u1_printf("6\n");
-			// u1_printf("hello111");
 			reqGameInfo();
-			// u1_printf("hello222");
 			zigbeeMessageRecord();
-			// u1_printf("hello333");
 			if (!built)
 			{
 				Barrier_edc24 b = getOneBarrier(0);
 				Position_edc24 tmppos = getVehiclePos();
 				if (b.pos_1.x != 0 && b.pos_1.y != 0 && b.pos_2.x != 0 && b.pos_2.y != 0 && tmppos.x != 0)
 				{
-					built = 1;
 					BuildMap();
-					//
+					built = 1;
 					u1_printf("built:%d, %d", tmppos.x, tmppos.y);
 					HAL_Delay(1000);
-					// uint16_t curNode=Get_Nearby_Node(tmppos.x, tmppos.y);
 				}
 			}
 		}
 		if (built)
 		{
+			/*
+			Position_edc24 tmppos = getVehiclePos();
+			u1_printf("%d,%d\n", tmppos.x, tmppos.y);
+			if(idx%20000<=10000){
+				if(idx%20000==0){
+					xPosPid.iErr=yPosPid.iErr=0;
+				}
+				xPosPid.goal=200;
+				yPosPid.goal=200;
+			}else{
+				if(idx%20000==10001){
+					xPosPid.iErr=yPosPid.iErr=0;
+				}
+					xPosPid.goal=200;
+				yPosPid.goal=50;
+			}
+			idx++;*/
 			Drive();
 		}
 		// Position_edc24 tmppos=getVehiclePos();
@@ -345,50 +336,28 @@ void setSpeed(uint8_t idx, double speed)
 }
 
 uint16_t idx = 0;
-
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM7)
 	{
 		Position_edc24 pos = getVehiclePos();
 		float vx = -pid_calculate(&xPosPid, pos.x);
-		float vy = pid_calculate(&yPosPid, pos.y);
-		if (deliver_state_simple == No_Order)
-		{
-			vx = 0;
-			vy = 0;
-			idx++;
-			if (idx % 100 < 50)
-			{
-				vy = 10;
-			}
-			else
-			{
-				vy = -10;
-			}
-			if (idx > 100)
-			{
-				idx = 0;
-			}
-		}
-		if (vx > MAX_SPEED)
-			vx = MAX_SPEED;
-		if (vx < -MAX_SPEED)
-			vx = -MAX_SPEED;
-		if (vy > MAX_SPEED)
-			vy = MAX_SPEED;
-		if (vy < -MAX_SPEED)
-			vy = -MAX_SPEED;
+		float vy = -pid_calculate(&yPosPid, pos.y);
+		if(xPosPid.goal == 0 && yPosPid.goal == 0)
+			vx=vy=0;
+//		if (drive_state == Ready)
+//		{
+//			vx = 0;
+//			vy = (idx % 100 < 50) ? 10 : -10;
+//			idx++;
+//			if (idx > 100)
+//				idx = 0;
+//		}
+		
+		vx = (vx > MAX_SPEED) ? MAX_SPEED : ((vx < -MAX_SPEED) ? -MAX_SPEED : vx);
+		vy = (vy > MAX_SPEED) ? MAX_SPEED : ((vy < -MAX_SPEED) ? -MAX_SPEED : vy);
 
-		// float vx=10, vy=0;
-		// float vy=5;
-		// zAnglePid.goal = drive_angle_goal;
 		zAnglePid.goal = 0;
-		if (zAnglePid.goal < -180.0f)
-			zAnglePid.goal = 180;
-		if (zAnglePid.goal > 180.0f)
-			zAnglePid.goal = -180;
-
 		float zAngleErr = angle.z - zAnglePid.goal;
 		if (zAngleErr > 180.0f)
 			zAngleErr -= 360.0f;
@@ -401,18 +370,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if (zAngleTht < -40)
 			zAngleTht = -40.0f;
 
-		// zAngleTht =0;
-		/*
-		speedPid[2].goal = vy + zAngleTht;
-		speedPid[3].goal = vy + zAngleTht;
-		speedPid[0].goal = vy - zAngleTht;
-		speedPid[1].goal = vy - zAngleTht;
-		*/
-		speedPid[0].goal = -zAngleTht + vx + vy;
-		speedPid[1].goal = -zAngleTht - vx + vy;
-		speedPid[2].goal = zAngleTht + vx + vy;
-		speedPid[3].goal = zAngleTht - vx + vy;
-
+		speedPid[0].goal = -zAngleTht + vx - vy;
+		speedPid[1].goal = -zAngleTht - vx - vy;
+		speedPid[2].goal = zAngleTht + vx - vy;
+		speedPid[3].goal = zAngleTht - vx - vy;
+		
 		int32_t tmp;
 		tmp = __HAL_TIM_GET_COUNTER(&htim8);
 		if (tmp >= 32768)
@@ -462,28 +424,24 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if (tht1 < -70)
 			tht1 = -70;
 		setSpeed(1, -tht1);
-		// setSpeed(1,10);
 
 		if (tht2 > 70)
 			tht2 = 70;
 		if (tht2 < -70)
 			tht2 = -70;
 		setSpeed(2, -tht2);
-		// setSpeed(2,10);
 
 		if (tht3 > 70)
 			tht3 = 70;
 		if (tht3 < -70)
 			tht3 = -70;
 		setSpeed(3, -tht3);
-		// setSpeed(3,10);
 
 		if (tht4 > 70)
 			tht4 = 70;
 		if (tht4 < -70)
 			tht4 = -70;
 		setSpeed(4, -tht4);
-		// setSpeed(4,10);
 	}
 }
 
