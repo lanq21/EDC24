@@ -17,6 +17,8 @@
 enum Drive_State_Type // 状态：就绪；前往下一个中间点；靠近目标点
 {
     Ready,
+    To_Set_Charge_Pile,
+    Setting_Charge_Pile,
     To_Dep,
     Dep_to_Des,
     To_Charge
