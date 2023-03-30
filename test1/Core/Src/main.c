@@ -161,8 +161,8 @@ int main(void)
 	pid_init(&speedPid[2], 2.0f, 0.1f, 0.0f);
 	pid_init(&speedPid[3], 2.0f, 0.1f, 0.0f);
 
-	pid_init(&xPosPid, 1.6f, 0.009f, 4.0f);
-	pid_init(&yPosPid, 1.4f, 0.002f, 4.0f);
+	pid_init(&xPosPid, 0.8f, 0.014f, 0.0f);
+	pid_init(&yPosPid, 1.4f, 0.01f, 20.0f);
 
 	pid_init(&zAnglePid, 1.1f, 0.04f, 0.01f);
 	zAnglePid.goal = 0;
@@ -201,27 +201,8 @@ int main(void)
 		}
 		if (built)
 		{
-			/*
-			Position_edc24 tmppos = getVehiclePos();
-			u1_printf("%d,%d\n", tmppos.x, tmppos.y);
-			if(idx%20000<=10000){
-				if(idx%20000==0){
-					xPosPid.iErr=yPosPid.iErr=0;
-				}
-				xPosPid.goal=200;
-				yPosPid.goal=200;
-			}else{
-				if(idx%20000==10001){
-					xPosPid.iErr=yPosPid.iErr=0;
-				}
-					xPosPid.goal=200;
-				yPosPid.goal=50;
-			}
-			idx++;*/
 			Drive();
 		}
-		// Position_edc24 tmppos=getVehiclePos();
-		// u1_printf("x:%d, y:%d\n", tmppos.x, tmppos.y);
 	}
 	/* USER CODE END 3 */
 }
@@ -343,17 +324,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		Position_edc24 pos = getVehiclePos();
 		float vx = -pid_calculate(&xPosPid, pos.x);
 		float vy = -pid_calculate(&yPosPid, pos.y);
-		if(xPosPid.goal == 0 && yPosPid.goal == 0)
-			vx=vy=0;
-//		if (drive_state == Ready)
-//		{
-//			vx = 0;
-//			vy = (idx % 100 < 50) ? 10 : -10;
-//			idx++;
-//			if (idx > 100)
-//				idx = 0;
-//		}
-		
+		if (xPosPid.goal == 0 && yPosPid.goal == 0)
+			vx = vy = 0;
+		//		if (drive_state == Ready)
+		//		{
+		//			vx = 0;
+		//			vy = (idx % 100 < 50) ? 10 : -10;
+		//			idx++;
+		//			if (idx > 100)
+		//				idx = 0;
+		//		}
+
 		vx = (vx > MAX_SPEED) ? MAX_SPEED : ((vx < -MAX_SPEED) ? -MAX_SPEED : vx);
 		vy = (vy > MAX_SPEED) ? MAX_SPEED : ((vy < -MAX_SPEED) ? -MAX_SPEED : vy);
 
@@ -374,7 +355,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		speedPid[1].goal = -zAngleTht - vx - vy;
 		speedPid[2].goal = zAngleTht + vx - vy;
 		speedPid[3].goal = zAngleTht - vx - vy;
-		
+
 		int32_t tmp;
 		tmp = __HAL_TIM_GET_COUNTER(&htim8);
 		if (tmp >= 32768)

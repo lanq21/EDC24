@@ -157,22 +157,6 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>39</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>..\Core\Src\drive.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
           <LineNumber>336</LineNumber>
           <EnabledFlag>0</EnabledFlag>
           <Address>134242730</Address>
@@ -187,7 +171,7 @@
           <Expression>\\test1\../Core/Src/usart.c\336</Expression>
         </Bp>
         <Bp>
-          <Number>2</Number>
+          <Number>1</Number>
           <Type>0</Type>
           <LineNumber>457</LineNumber>
           <EnabledFlag>1</EnabledFlag>
@@ -203,7 +187,7 @@
           <Expression></Expression>
         </Bp>
         <Bp>
-          <Number>3</Number>
+          <Number>2</Number>
           <Type>0</Type>
           <LineNumber>461</LineNumber>
           <EnabledFlag>1</EnabledFlag>
@@ -219,7 +203,7 @@
           <Expression></Expression>
         </Bp>
         <Bp>
-          <Number>4</Number>
+          <Number>3</Number>
           <Type>0</Type>
           <LineNumber>462</LineNumber>
           <EnabledFlag>1</EnabledFlag>
@@ -235,7 +219,7 @@
           <Expression></Expression>
         </Bp>
         <Bp>
-          <Number>5</Number>
+          <Number>4</Number>
           <Type>0</Type>
           <LineNumber>464</LineNumber>
           <EnabledFlag>1</EnabledFlag>
@@ -251,7 +235,7 @@
           <Expression></Expression>
         </Bp>
         <Bp>
-          <Number>6</Number>
+          <Number>5</Number>
           <Type>0</Type>
           <LineNumber>465</LineNumber>
           <EnabledFlag>1</EnabledFlag>
@@ -267,9 +251,25 @@
           <Expression></Expression>
         </Bp>
         <Bp>
+          <Number>6</Number>
+          <Type>0</Type>
+          <LineNumber>38</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>0</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>0</BreakIfRCount>
+          <Filename>..\Core\Src\drive.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+        <Bp>
           <Number>7</Number>
           <Type>0</Type>
-          <LineNumber>40</LineNumber>
+          <LineNumber>39</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -285,7 +285,7 @@
         <Bp>
           <Number>8</Number>
           <Type>0</Type>
-          <LineNumber>38</LineNumber>
+          <LineNumber>40</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
