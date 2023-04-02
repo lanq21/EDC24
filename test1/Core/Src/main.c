@@ -67,6 +67,8 @@ extern struct vec acc, angle, vel;
 extern uint32_t height;
 extern float g;
 
+//uint8_t hash[65536];
+
 enum stateValue
 {
 	running,
@@ -76,6 +78,12 @@ enum stateValue
 uint8_t state = stop;
 
 extern uint8_t receive_flag;
+
+uint32_t lastReqTime = 0;
+
+extern int32_t charging_pile_num;
+
+extern uint8_t settingc;
 
 // extern float drive_velocity_x_goal;
 // extern float drive_velocity_y_goal;
@@ -95,45 +103,45 @@ void setSpeed(uint8_t idx, double speed);
 /* USER CODE END 0 */
 
 /**
- * @brief  The application entry point.
- * @retval int
- */
+  * @brief  The application entry point.
+  * @retval int
+  */
 int main(void)
 {
-	/* USER CODE BEGIN 1 */
+  /* USER CODE BEGIN 1 */
 
-	/* USER CODE END 1 */
+  /* USER CODE END 1 */
 
-	/* MCU Configuration--------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
-	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-	HAL_Init();
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
 
-	/* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-	/* USER CODE END Init */
+  /* USER CODE END Init */
 
-	/* Configure the system clock */
-	SystemClock_Config();
+  /* Configure the system clock */
+  SystemClock_Config();
 
-	/* USER CODE BEGIN SysInit */
+  /* USER CODE BEGIN SysInit */
 
-	/* USER CODE END SysInit */
+  /* USER CODE END SysInit */
 
-	/* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_DMA_Init();
-	MX_TIM2_Init();
-	MX_TIM3_Init();
-	MX_TIM4_Init();
-	MX_TIM5_Init();
-	MX_USART1_UART_Init();
-	MX_USART2_UART_Init();
-	MX_USART3_UART_Init();
-	MX_TIM7_Init();
-	MX_TIM8_Init();
-	MX_TIM1_Init();
-	/* USER CODE BEGIN 2 */
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_TIM4_Init();
+  MX_TIM5_Init();
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
+  MX_TIM7_Init();
+  MX_TIM8_Init();
+  MX_TIM1_Init();
+  /* USER CODE BEGIN 2 */
 
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_1);
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
@@ -141,7 +149,7 @@ int main(void)
 	HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_4);
 	HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 	HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
-	HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+	HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 	HAL_TIM_Encoder_Start(&htim8, TIM_CHANNEL_ALL);
 
 	HAL_TIM_Base_Start_IT(&htim7);
@@ -156,13 +164,17 @@ int main(void)
 	HAL_Delay(500);
 	state = running;
 
-	pid_init(&speedPid[0], 2.0f, 0.1f, 0.0f);
-	pid_init(&speedPid[1], 2.0f, 0.1f, 0.0f);
-	pid_init(&speedPid[2], 2.0f, 0.1f, 0.0f);
-	pid_init(&speedPid[3], 2.0f, 0.1f, 0.0f);
+	pid_init(&speedPid[0], 3.0f, 0.12f, 0.0f);
+	pid_init(&speedPid[1], 3.0f, 0.12f, 0.0f);
+	pid_init(&speedPid[2], 3.0f, 0.12f, 0.0f);
+	pid_init(&speedPid[3], 3.0f, 0.12f, 0.0f);
 
-	pid_init(&xPosPid, 0.8f, 0.014f, 0.0f);
-	pid_init(&yPosPid, 1.4f, 0.01f, 20.0f);
+	pid_init(&xPosPid, 2.5f, 0.021f, 5.0f);
+	pid_init(&yPosPid, 2.0f, 0.015f, 4.5f);
+	// speedPid[0].goal=10;
+	// speedPid[1].goal=10;
+	// speedPid[2].goal=10;
+	// speedPid[3].goal=10;
 
 	pid_init(&zAnglePid, 1.1f, 0.04f, 0.01f);
 	zAnglePid.goal = 0;
@@ -170,85 +182,125 @@ int main(void)
 
 	zigbee_Init(&huart2);
 
-	/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
 	uint32_t idx = 0;
 	uint8_t built = 0;
+	uint8_t charge_pile_set = 0;
 	Drive_Init();
+	//for(uint32_t i=0;i<65536;++i) hash[i]=1;
 	while (1)
 	{
-		/* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-		/* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
+		 
+		if(idx%200<100){
+			//setSpeed(3,60);
+			//setSpeed(1,60);
+			//setSpeed(2,60);
+			//setSpeed(4,60);
+		}else{
+			//setSpeed(3,-60);
+			//setSpeed(1,-60);
+			//setSpeed(2,-60);
+			//setSpeed(4,-60);
+		}
+		idx++;
+		uint32_t currentTime=HAL_GetTick();
+		if(receive_flag && currentTime-lastReqTime > 90){
+			reqGameInfo();
+			lastReqTime = currentTime;
+		}
 		if (receive_flag)
 		{
-			reqGameInfo();
 			zigbeeMessageRecord();
+			
+			saveOrder();
+			charging_pile_num = getOwnChargingPileNum();
 			if (!built)
 			{
 				Barrier_edc24 b = getOneBarrier(0);
 				Position_edc24 tmppos = getVehiclePos();
 				if (b.pos_1.x != 0 && b.pos_1.y != 0 && b.pos_2.x != 0 && b.pos_2.y != 0 && tmppos.x != 0)
 				{
-					BuildMap();
 					built = 1;
+					BuildMap();
+					//
 					u1_printf("built:%d, %d", tmppos.x, tmppos.y);
 					HAL_Delay(1000);
+					settingc=1;
+					// uint16_t curNode=Get_Nearby_Node(tmppos.x, tmppos.y);
 				}
 			}
 		}
+		else
+		{
+		}
 		if (built)
 		{
-			Drive();
+			 if(charging_pile_num<3)
+				Drive_Set_Charge_Pile();
+			 else{
+					settingc = 0;
+				 Drive_Simple();
+			 }
+			
+
+			// Go_to(100,100);
 		}
+		 //u1_printf("%d, %d, %d, %d, %f\n", speed[0], speed[1], speed[2], speed[3], angle.z);
+		// Position_edc24 tmppos=getVehiclePos();
+		// u1_printf("x:%d, y:%d\n", tmppos.x, tmppos.y);
 	}
-	/* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
 
 /**
- * @brief System Clock Configuration
- * @retval None
- */
+  * @brief System Clock Configuration
+  * @retval None
+  */
 void SystemClock_Config(void)
 {
-	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	/** Configure the main internal regulator output voltage
-	 */
-	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  /** Configure the main internal regulator output voltage
+  */
+  __HAL_RCC_PWR_CLK_ENABLE();
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-	/** Initializes the RCC Oscillators according to the specified parameters
-	 * in the RCC_OscInitTypeDef structure.
-	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	RCC_OscInitStruct.PLL.PLLM = 4;
-	RCC_OscInitStruct.PLL.PLLN = 168;
-	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-	RCC_OscInitStruct.PLL.PLLQ = 4;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-	{
-		Error_Handler();
-	}
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLN = 168;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-	/** Initializes the CPU, AHB and APB buses clocks
-	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-	{
-		Error_Handler();
-	}
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /* USER CODE BEGIN 4 */
@@ -258,13 +310,13 @@ void setSpeed(uint8_t idx, double speed)
 	{
 		if (speed > 0)
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, 1);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, 1);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, 0);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, 0);
 			speed = -speed;
 		}
 		__HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_1, 2000 * speed / 100);
@@ -273,13 +325,13 @@ void setSpeed(uint8_t idx, double speed)
 	{
 		if (speed > 0)
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 0);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 0);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 1);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, 1);
 			speed = -speed;
 		}
 		__HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_2, 2000 * speed / 100);
@@ -288,13 +340,13 @@ void setSpeed(uint8_t idx, double speed)
 	{
 		if (speed > 0)
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, 0);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, 1);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, 0);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, 1);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, 0);
+			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, 1);
 			speed = -speed;
 		}
 		__HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_3, 2000 * speed / 100);
@@ -303,42 +355,59 @@ void setSpeed(uint8_t idx, double speed)
 	{
 		if (speed > 0)
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, 1);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, 0);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, 0);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, 1);
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_11, 0);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_12, 1);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, 1);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, 0);
 			speed = -speed;
 		}
 		__HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_4, 2000 * speed / 100);
 	}
 }
 
-uint16_t idx = 0;
+
+uint16_t idx=0;
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if (htim->Instance == TIM7)
 	{
 		Position_edc24 pos = getVehiclePos();
 		float vx = -pid_calculate(&xPosPid, pos.x);
-		float vy = -pid_calculate(&yPosPid, pos.y);
-		if (xPosPid.goal == 0 && yPosPid.goal == 0)
-			vx = vy = 0;
-		//		if (drive_state == Ready)
-		//		{
-		//			vx = 0;
-		//			vy = (idx % 100 < 50) ? 10 : -10;
-		//			idx++;
-		//			if (idx > 100)
-		//				idx = 0;
-		//		}
+		float vy = pid_calculate(&yPosPid, pos.y);
+		if (deliver_state_simple == No_Order && !settingc)
+		{
+			vx = 0;
+			vy = 0;
+			idx++;
+			if(idx%100<50){
+				vy=10;
+			}else{
+				vy=-10;
+			}
+			if(idx>100){idx=0;}
+		}
+		if (vx > MAX_SPEED)
+			vx = MAX_SPEED;
+		if (vx < -MAX_SPEED)
+			vx = -MAX_SPEED;
+		if (vy > MAX_SPEED)
+			vy = MAX_SPEED;
+		if (vy < -MAX_SPEED)
+			vy = -MAX_SPEED;
 
-		vx = (vx > MAX_SPEED) ? MAX_SPEED : ((vx < -MAX_SPEED) ? -MAX_SPEED : vx);
-		vy = (vy > MAX_SPEED) ? MAX_SPEED : ((vy < -MAX_SPEED) ? -MAX_SPEED : vy);
-
+		// float vx=10, vy=0;
+		// float vy=5;
+		// zAnglePid.goal = drive_angle_goal;
 		zAnglePid.goal = 0;
+		if (zAnglePid.goal < -180.0f)
+			zAnglePid.goal = 180;
+		if (zAnglePid.goal > 180.0f)
+			zAnglePid.goal = -180;
+
 		float zAngleErr = angle.z - zAnglePid.goal;
 		if (zAngleErr > 180.0f)
 			zAngleErr -= 360.0f;
@@ -351,10 +420,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		if (zAngleTht < -40)
 			zAngleTht = -40.0f;
 
-		speedPid[0].goal = -zAngleTht + vx - vy;
-		speedPid[1].goal = -zAngleTht - vx - vy;
-		speedPid[2].goal = zAngleTht + vx - vy;
-		speedPid[3].goal = zAngleTht - vx - vy;
+		// zAngleTht =0;
+		/*
+		speedPid[2].goal = vy + zAngleTht;
+		speedPid[3].goal = vy + zAngleTht;
+		speedPid[0].goal = vy - zAngleTht;
+		speedPid[1].goal = vy - zAngleTht;
+		*/
+		speedPid[0].goal = -zAngleTht + vx + vy;
+		speedPid[1].goal = -zAngleTht - vx + vy;
+		speedPid[2].goal = zAngleTht + vx + vy;
+		speedPid[3].goal = zAngleTht - vx + vy;
 
 		int32_t tmp;
 		tmp = __HAL_TIM_GET_COUNTER(&htim8);
@@ -372,7 +448,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 			tmp -= 65536;
 		speed[2] = coff * (float)tmp + (1 - coff) * speed[2];
 
-		tmp = __HAL_TIM_GET_COUNTER(&htim1);
+		tmp = __HAL_TIM_GET_COUNTER(&htim4);
 		if (tmp >= 32768)
 			tmp -= 65536;
 		speed[3] = coff * (float)tmp + (1 - coff) * speed[3];
@@ -386,7 +462,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		__HAL_TIM_SetCounter(&htim8, 0);
 		__HAL_TIM_SetCounter(&htim2, 0);
 		__HAL_TIM_SetCounter(&htim3, 0);
-		__HAL_TIM_SetCounter(&htim1, 0);
+		__HAL_TIM_SetCounter(&htim4, 0);
 
 		/*
 		for(uint8_t i=0;i<4;++i){
@@ -396,33 +472,37 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}*/
 
 		double tht1 = pid_calculate(&speedPid[0], -(float)speed[2]);
-		double tht2 = pid_calculate(&speedPid[1], (float)speed[1]);
-		double tht3 = pid_calculate(&speedPid[2], (float)speed[3]);
-		double tht4 = pid_calculate(&speedPid[3], -(float)speed[0]);
+		double tht2 = pid_calculate(&speedPid[1], -(float)speed[1]);
+		double tht3 = pid_calculate(&speedPid[2], (float)speed[0]);
+		double tht4 = pid_calculate(&speedPid[3], (float)speed[3]);
 
 		if (tht1 > 70)
 			tht1 = 70;
 		if (tht1 < -70)
 			tht1 = -70;
 		setSpeed(1, -tht1);
+		//setSpeed(1,60);
 
 		if (tht2 > 70)
 			tht2 = 70;
 		if (tht2 < -70)
 			tht2 = -70;
 		setSpeed(2, -tht2);
-
+		//setSpeed(2,10);
+		
 		if (tht3 > 70)
 			tht3 = 70;
 		if (tht3 < -70)
 			tht3 = -70;
 		setSpeed(3, -tht3);
+		//setSpeed(3,-60);
 
 		if (tht4 > 70)
 			tht4 = 70;
 		if (tht4 < -70)
 			tht4 = -70;
 		setSpeed(4, -tht4);
+		//setSpeed(4,-60);
 	}
 }
 
@@ -507,33 +587,33 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 /* USER CODE END 4 */
 
 /**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
 void Error_Handler(void)
 {
-	/* USER CODE BEGIN Error_Handler_Debug */
+  /* USER CODE BEGIN Error_Handler_Debug */
 	/* User can add his own implementation to report the HAL error return state */
 	__disable_irq();
 	while (1)
 	{
 	}
-	/* USER CODE END Error_Handler_Debug */
+  /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
- * @brief  Reports the name of the source file and the source line number
- *         where the assert_param error has occurred.
- * @param  file: pointer to the source file name
- * @param  line: assert_param error line source number
- * @retval None
- */
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
-	/* USER CODE BEGIN 6 */
+  /* USER CODE BEGIN 6 */
 	/* User can add his own implementation to report the file name and line number,
 	   ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-	/* USER CODE END 6 */
+  /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */

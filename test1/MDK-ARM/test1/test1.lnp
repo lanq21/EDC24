@@ -1,4 +1,4 @@
---cpu=Cortex-M4.fp.sp
+--cpu=Cortex-M4.fp
 "test1\startup_stm32f407xx.o"
 "test1\pid.o"
 "test1\jy62.o"

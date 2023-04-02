@@ -19,6 +19,7 @@
     ],
     "files.associations": {
         "drive.h": "c",
-        "dijkstra.h": "c"
+        "dijkstra.h": "c",
+        "pid.h": "c"
     }
 }
